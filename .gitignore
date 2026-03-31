@@ -1,0 +1,8 @@
+.airbyte/
+.kube/
+.vscode-server/
+*.log
+*.swp
+.env
+data/
+pgdata/
