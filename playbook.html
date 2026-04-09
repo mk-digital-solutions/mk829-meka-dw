@@ -249,18 +249,5 @@
         <p>Para mais informações, consulte a <a href="https://docs.airbyte.com">documentação oficial do Airbyte</a>.</p>
     </div>
 
-    <script>
-        // Simple interactivity: toggle visibility for steps
-        const summaries = document.querySelectorAll('summary');
-        summaries.forEach(summary => {
-            summary.addEventListener('click', () => {
-                const detail = summary.parentElement;
-                const content = detail.querySelector('.step') || detail.querySelector('div');
-                if (content) {
-                    content.classList.toggle('hidden');
-                }
-            });
-        });
-    </script>
 </body>
 </html>
