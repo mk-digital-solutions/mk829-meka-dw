@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: mkdw_db
       POSTGRES_USER: admin
-      # POSTGRES_PASSWORD: Defina a senha aqui ou use variável de ambiente
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
 
     ports:
       - "5432:5432"
