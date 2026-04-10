@@ -9,7 +9,11 @@ services:
     environment:
       POSTGRES_DB: mkdw_db
       POSTGRES_USER: admin
+<<<<<<< HEAD
       POSTGRES_PASSWORD: T9kVw3ZpL8nQx7R2mHcJ4sYfA6B1DgUe
+=======
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+>>>>>>> 848108c1b9aa329c43a924f0a52dc487ae35c060
 
     ports:
       - "5432:5432"
