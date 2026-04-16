@@ -57,17 +57,13 @@ Centralizar e estruturar os dados da empresa, permitindo:
 
 ---
 
-<<<<<<< HEAD
-## 🚀 Próximos Passos
-=======
-## � Playbook Interativo
+## 📖 Playbook Interativo
 
-Para um guia passo a passo interativo sobre a configuração e uso do projeto, acesse o [Playbook MK829 - Meka-DW](https://[username].github.io/mk829-meka-dw/) (substitua [username] pelo seu nome de usuário no GitHub).
+Para um guia passo a passo interativo sobre configuração, padrões de nomenclatura e uso do projeto, acesse o arquivo `playbook.html` no repositório.
 
 ---
 
-## �🚀 Próximos Passos
->>>>>>> 848108c1b9aa329c43a924f0a52dc487ae35c060
+## 🚀 Próximos Passos
 
 - Importação de APIs para extração dos dados das diversas plataformas utilizadas
 - Uso de conector MySQL como Source no Airbyte

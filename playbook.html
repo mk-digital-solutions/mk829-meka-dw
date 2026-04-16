@@ -19,7 +19,7 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1, h2, h3 {
+        h1, h2, h3, h4 {
             color: #333;
         }
         details {
@@ -34,6 +34,9 @@
         }
         summary:hover {
             background: #d9d9d9;
+        }
+        details > div, details > .step {
+            padding: 10px 10px 0 10px;
         }
         table {
             width: 100%;
@@ -54,28 +57,69 @@
             margin: 10px 0;
             border-left: 5px solid #007bff;
         }
-        .button {
-            background-color: #007bff;
+        .tip {
+            background: #e8f4fd;
+            border-left: 5px solid #17a2b8;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        code {
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.95em;
+        }
+        .tag {
+            display: inline-block;
+            background: #007bff;
             color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
+            border-radius: 3px;
+            padding: 1px 7px;
+            font-size: 0.85em;
+            margin-right: 4px;
         }
-        .button:hover {
-            background-color: #0056b3;
+        .tag.green  { background: #28a745; }
+        .tag.orange { background: #fd7e14; }
+        .tag.purple { background: #6f42c1; }
+        .tag.teal   { background: #17a2b8; }
+        .tag.red    { background: #dc3545; }
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
         }
-        .hidden {
-            display: none;
+        .source-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            background: #fafafa;
+        }
+        .source-card h4 {
+            margin: 0 0 6px 0;
+            font-size: 1em;
+        }
+        .source-card table {
+            margin: 6px 0 0 0;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Playbook Interativo: MK829 - Data Warehouse Mekatronik</h1>
-        <p>Bem-vindo ao playbook interativo para o projeto MK829 - Meka-DW. Este guia combina informações do README e da documentação do Airbyte para ajudar na configuração e gerenciamento do Data Warehouse.</p>
+        <p>Bem-vindo ao playbook interativo para o projeto MK829 - Meka-DW. Este guia cobre a configuração do ambiente, os fluxos de dados com Airbyte, os padrões de nomenclatura e as boas práticas do projeto.</p>
 
+        <!-- ===================== VISÃO GERAL ===================== -->
         <details>
             <summary>📌 Visão Geral do Projeto</summary>
             <div class="step">
@@ -95,14 +139,192 @@
                 </ul>
                 <h3>Fluxo de Dados</h3>
                 <ol>
-                    <li>Extração de dados do Google Sheets</li>
-                    <li>Processamento via Airbyte</li>
-                    <li>Carga no PostgreSQL</li>
-                    <li>Estruturação para Data Warehouse</li>
+                    <li>Extração de dados das fontes (Google Sheets, FlowUp, Agilizatronik, MMGP, VOE)</li>
+                    <li>Ingestão via Airbyte para o schema <code>raw_airbyte</code> no PostgreSQL</li>
+                    <li>Transformação e modelagem nas camadas <code>stg_</code>, <code>int_</code> e <code>mart_</code></li>
+                    <li>Consumo analítico via Power BI ou outras ferramentas de BI</li>
                 </ol>
             </div>
         </details>
 
+        <!-- ===================== PADRÕES DE NOMENCLATURA ===================== -->
+        <details>
+            <summary>🏷️ Padrões de Nomenclatura</summary>
+            <div>
+                <div class="tip">
+                    <strong>O que é snake_case?</strong> É escrever nomes usando letras minúsculas separadas por underline (<code>_</code>). Exemplo: <code>nome_do_projeto</code>, <code>data_criacao</code>. Bancos de dados e ferramentas como Airbyte são sensíveis a espaços e acentos — seguir esse padrão evita erros.
+                </div>
+
+                <details>
+                    <summary>Schemas (Pastas do Banco)</summary>
+                    <div class="step">
+                        <p>Pense nos schemas como as <strong>pastas</strong> do banco de dados. Cada pasta guarda tabelas de uma mesma etapa do pipeline.</p>
+                        <table>
+                            <tr><th>Prefixo</th><th>Exemplo</th><th>O que guarda</th></tr>
+                            <tr><td><code>raw_</code></td><td><code>raw_airbyte</code></td><td>Dados brutos, exatamente como chegam das fontes</td></tr>
+                            <tr><td><code>stg_</code></td><td><code>stg_faturamento</code></td><td>Dados limpos e padronizados (staging)</td></tr>
+                            <tr><td><code>int_</code></td><td><code>int_projetos</code></td><td>Dados já combinados entre tabelas (intermediário)</td></tr>
+                            <tr><td><code>mart_</code></td><td><code>mart_gestao</code></td><td>Dados prontos para análise e relatórios</td></tr>
+                            <tr><td><code>audit_</code></td><td><code>audit_logs</code></td><td>Registros de controle e rastreabilidade</td></tr>
+                        </table>
+                        <p><strong>Regras:</strong> tudo em minúsculo, sem acentos, sem espaços, use <code>_</code> para separar palavras.</p>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>Tabelas</summary>
+                    <div class="step">
+                        <p>Toda tabela começa com um <strong>prefixo</strong> que indica o seu tipo:</p>
+                        <table>
+                            <tr><th>Prefixo</th><th>Exemplo</th><th>Quando usar</th></tr>
+                            <tr><td><code>fct_</code></td><td><code>fct_atividades</code></td><td>Eventos e métricas mensuráveis (fatos)</td></tr>
+                            <tr><td><code>dim_</code></td><td><code>dim_colaboradores</code></td><td>Entidades descritivas (dimensões)</td></tr>
+                            <tr><td><code>stg_</code></td><td><code>stg_apontamentos_flowup</code></td><td>Dados brutos padronizados</td></tr>
+                            <tr><td><code>int_</code></td><td><code>int_entregas</code></td><td>Tabelas intermediárias com cruzamentos</td></tr>
+                        </table>
+                        <p><strong>Regras:</strong> sempre minúsculo, snake_case, nome no <strong>plural</strong>, descreve o <em>conteúdo</em> — não a planilha de origem.</p>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>Colunas</summary>
+                    <div class="step">
+                        <p>Sufixos que indicam o tipo do dado na coluna:</p>
+                        <table>
+                            <tr><th>Sufixo</th><th>Exemplo</th><th>Tipo de dado</th></tr>
+                            <tr><td><code>_id</code></td><td><code>projeto_id</code></td><td>Identificador único (chave primária)</td></tr>
+                            <tr><td><code>_fk</code></td><td><code>projeto_fk</code></td><td>Referência a outra tabela</td></tr>
+                            <tr><td><code>_at</code></td><td><code>criado_at</code></td><td>Data e hora (timestamp)</td></tr>
+                            <tr><td><code>_dt</code></td><td><code>inicio_dt</code></td><td>Somente data</td></tr>
+                            <tr><td><code>_qtd</code></td><td><code>horas_qtd</code></td><td>Quantidade numérica</td></tr>
+                            <tr><td><code>_vlr</code></td><td><code>custo_vlr</code></td><td>Valor monetário</td></tr>
+                            <tr><td><code>_flag</code></td><td><code>ativo_flag</code></td><td>Verdadeiro/Falso (sim/não)</td></tr>
+                            <tr><td><code>_cd</code></td><td><code>status_cd</code></td><td>Código de categoria ou status</td></tr>
+                            <tr><td><code>_nm</code></td><td><code>projeto_nm</code></td><td>Nome ou descrição textual</td></tr>
+                        </table>
+                        <p><strong>Colunas obrigatórias em toda tabela:</strong></p>
+                        <ul>
+                            <li><code>airbyte_created_at</code> — quando o registro foi carregado pelo Airbyte</li>
+                            <li><code>fonte_nm</code> — identifica a origem (ex: <code>'flowup'</code>, <code>'google_sheets'</code>)</li>
+                        </ul>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>Arquivos e Pastas</summary>
+                    <div class="step">
+                        <table>
+                            <tr><th>Tipo</th><th>Padrão</th><th>Exemplo</th></tr>
+                            <tr><td>Documentação</td><td><code>snake_case.md</code></td><td><code>padrao_nomenclaturas.md</code></td></tr>
+                            <tr><td>SQL — staging</td><td><code>stg_[fonte]_[entidade].sql</code></td><td><code>stg_flowup_apontamentos.sql</code></td></tr>
+                            <tr><td>SQL — mart fato</td><td><code>fct_[entidade].sql</code></td><td><code>fct_atividades.sql</code></td></tr>
+                            <tr><td>SQL — dimensão</td><td><code>dim_[entidade].sql</code></td><td><code>dim_colaboradores.sql</code></td></tr>
+                            <tr><td>Configurações</td><td><code>snake_case.yaml</code></td><td><code>docker_compose.yaml</code></td></tr>
+                        </table>
+                        <div class="warning">
+                            ⚠️ Arquivos sensíveis como <code>.env</code> e chaves JSON <strong>nunca</strong> devem ser enviados ao repositório Git — certifique-se de que estão no <code>.gitignore</code>.
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </details>
+
+        <!-- ===================== FONTES DE DADOS ===================== -->
+        <details>
+            <summary>🗄️ Fontes de Dados e Tabelas Raw</summary>
+            <div>
+                <p>Todas as tabelas brutas chegam no schema <code>raw_airbyte</code>. O padrão de nome é <code>[fonte]_[entidade_plural]</code> — configure esse nome como o <strong>stream name</strong> no Airbyte.</p>
+
+                <div class="source-grid">
+
+                    <div class="source-card">
+                        <h4>📊 Planilhas de Cronograma <span class="tag green">Google Sheets</span></h4>
+                        <table>
+                            <tr><th>Tabela raw</th><th>Conteúdo</th></tr>
+                            <tr><td><code>cronograma_atividades</code></td><td>Atividades e tarefas</td></tr>
+                            <tr><td><code>cronograma_marcos</code></td><td>Marcos e entregas</td></tr>
+                            <tr><td><code>cronograma_fases</code></td><td>Fases dos projetos</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="source-card">
+                        <h4>👥 Alocação e Colaboradores <span class="tag green">Google Sheets</span></h4>
+                        <table>
+                            <tr><th>Tabela raw</th><th>Conteúdo</th></tr>
+                            <tr><td><code>alocacao_equipe</code></td><td>Alocação de colaboradores</td></tr>
+                            <tr><td><code>colaboradores</code></td><td>Cadastro de colaboradores</td></tr>
+                            <tr><td><code>alocacao_projetos</code></td><td>Alocação por projeto</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="source-card">
+                        <h4>📋 Planilha de Acompanhamento <span class="tag green">Google Sheets</span></h4>
+                        <table>
+                            <tr><th>Tabela raw</th><th>Conteúdo</th></tr>
+                            <tr><td><code>acompanhamento_projetos</code></td><td>Status e progresso</td></tr>
+                            <tr><td><code>acompanhamento_tarefas</code></td><td>Acompanhamento de tarefas</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="source-card">
+                        <h4>💰 FlowUp <span class="tag orange">MySQL</span></h4>
+                        <p style="font-size:0.85em;color:#666;margin:2px 0 6px 0;">Gestão financeira e horas alocadas</p>
+                        <table>
+                            <tr><th>Tabela raw</th><th>Conteúdo</th></tr>
+                            <tr><td><code>flowup_projetos</code></td><td>Projetos cadastrados</td></tr>
+                            <tr><td><code>flowup_apontamentos</code></td><td>Horas apontadas</td></tr>
+                            <tr><td><code>flowup_centros_custo</code></td><td>Centros de custo</td></tr>
+                            <tr><td><code>flowup_colaboradores</code></td><td>Colaboradores</td></tr>
+                            <tr><td><code>flowup_despesas</code></td><td>Despesas financeiras</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="source-card">
+                        <h4>🎫 Agilizatronik <span class="tag purple">API Rest</span></h4>
+                        <p style="font-size:0.85em;color:#666;margin:2px 0 6px 0;">Sistema de chamados e tickets</p>
+                        <table>
+                            <tr><th>Tabela raw</th><th>Conteúdo</th></tr>
+                            <tr><td><code>agilizatronik_chamados</code></td><td>Chamados abertos</td></tr>
+                            <tr><td><code>agilizatronik_categorias</code></td><td>Categorias dos chamados</td></tr>
+                            <tr><td><code>agilizatronik_responsaveis</code></td><td>Responsáveis</td></tr>
+                            <tr><td><code>agilizatronik_status</code></td><td>Status possíveis</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="source-card">
+                        <h4>🏢 MMGP <span class="tag teal">API Rest</span></h4>
+                        <p style="font-size:0.85em;color:#666;margin:2px 0 6px 0;">CRM e gestão de projetos</p>
+                        <table>
+                            <tr><th>Tabela raw</th><th>Conteúdo</th></tr>
+                            <tr><td><code>mmgp_projetos</code></td><td>Projetos cadastrados</td></tr>
+                            <tr><td><code>mmgp_oportunidades</code></td><td>Oportunidades (CRM)</td></tr>
+                            <tr><td><code>mmgp_clientes</code></td><td>Cadastro de clientes</td></tr>
+                            <tr><td><code>mmgp_contratos</code></td><td>Contratos e propostas</td></tr>
+                            <tr><td><code>mmgp_tarefas</code></td><td>Tarefas por projeto</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="source-card">
+                        <h4>🚀 VOE <span class="tag red">API Rest</span></h4>
+                        <p style="font-size:0.85em;color:#666;margin:2px 0 6px 0;">CRM / gestão ágil de projetos</p>
+                        <table>
+                            <tr><th>Tabela raw</th><th>Conteúdo</th></tr>
+                            <tr><td><code>voe_projetos</code></td><td>Projetos cadastrados</td></tr>
+                            <tr><td><code>voe_sprints</code></td><td>Sprints e ciclos</td></tr>
+                            <tr><td><code>voe_tarefas</code></td><td>Tarefas e backlog</td></tr>
+                            <tr><td><code>voe_clientes</code></td><td>Cadastro de clientes</td></tr>
+                        </table>
+                    </div>
+
+                </div>
+
+                <div class="tip">
+                    💡 <strong>Nova tabela?</strong> Se uma fonte gerar contextos adicionais, siga o padrão <code>[fonte]_[entidade_plural]</code> e adicione a esta documentação.
+                </div>
+            </div>
+        </details>
+
+        <!-- ===================== FLUXOS AIRBYTE ===================== -->
         <details>
             <summary>🔄 Fluxos de Extração com Airbyte</summary>
             <div>
@@ -110,7 +332,7 @@
                 <details>
                     <summary>Fluxo 1: Google Sheets → PostgreSQL</summary>
                     <div class="step">
-                        <p>Extrai dados de cronogramas no Google Sheets e carrega no PostgreSQL.</p>
+                        <p>Extrai dados de planilhas no Google Sheets e carrega no PostgreSQL (schema <code>raw_airbyte</code>).</p>
                         <h4>Configuração da Source (Google Sheets)</h4>
                         <ol>
                             <li>Acesse <strong>Sources</strong> → <strong>+ New Source</strong></li>
@@ -118,13 +340,13 @@
                             <li>Preencha:
                                 <table>
                                     <tr><th>Campo</th><th>Valor</th></tr>
-                                    <tr><td>Name</td><td>google_sheets_MKXXX</td></tr>
+                                    <tr><td>Name</td><td><code>google_sheets_MKXXX</code></td></tr>
                                     <tr><td>Authentication</td><td>Service Account Key (JSON)</td></tr>
                                     <tr><td>Spreadsheet Link</td><td>URL da planilha</td></tr>
                                     <tr><td>Row Batch Size</td><td>200</td></tr>
                                 </table>
                             </li>
-                            <li>Compartilhe a planilha com a conta de serviço</li>
+                            <li>Compartilhe a planilha com o e-mail da conta de serviço (permissão de Leitor ou Editor)</li>
                             <li>Clique em <strong>Test and Save</strong></li>
                         </ol>
                         <h4>Configuração da Destination (PostgreSQL)</h4>
@@ -134,13 +356,13 @@
                             <li>Preencha:
                                 <table>
                                     <tr><th>Campo</th><th>Valor</th></tr>
-                                    <tr><td>Name</td><td>postgres_mkdw</td></tr>
+                                    <tr><td>Name</td><td><code>postgres_mkdw</code></td></tr>
                                     <tr><td>Host</td><td>Meka-dw</td></tr>
                                     <tr><td>Port</td><td>5432</td></tr>
                                     <tr><td>Database</td><td>postgres</td></tr>
-                                    <tr><td>Schema</td><td>raw_airbyte</td></tr>
-                                    <tr><td>Username</td><td>Usuário com permissão</td></tr>
-                                    <tr><td>Password</td><td>Senha</td></tr>
+                                    <tr><td>Schema</td><td><code>raw_airbyte</code></td></tr>
+                                    <tr><td>Username</td><td>Usuário com permissão de escrita</td></tr>
+                                    <tr><td>Password</td><td>Senha do usuário</td></tr>
                                     <tr><td>SSL Mode</td><td>require</td></tr>
                                 </table>
                             </li>
@@ -150,9 +372,13 @@
                         <ol>
                             <li>Acesse <strong>Connections</strong> → <strong>+ New Connection</strong></li>
                             <li>Selecione source e destination</li>
-                            <li>Configure: Full Refresh — Overwrite, agendamento conforme necessidade</li>
+                            <li>Renomeie os <strong>streams</strong> conforme os nomes definidos na seção "Fontes de Dados e Tabelas Raw"</li>
+                            <li>Configure: <strong>Full Refresh — Overwrite</strong>, agendamento a cada 12 horas (padrão)</li>
                             <li>Clique em <strong>Set up connection</strong></li>
                         </ol>
+                        <div class="warning">
+                            ⚠️ <strong>Full Refresh — Overwrite:</strong> a cada execução, todos os dados da tabela de destino são apagados e recarregados. Alterações manuais no PostgreSQL serão perdidas no próximo sync.
+                        </div>
                     </div>
                 </details>
                 <details>
@@ -166,18 +392,21 @@
                             <li>Preencha:
                                 <table>
                                     <tr><th>Campo</th><th>Valor</th></tr>
-                                    <tr><td>Name</td><td>postgres_mkdw</td></tr>
+                                    <tr><td>Name</td><td><code>postgres_mkdw</code></td></tr>
                                     <tr><td>Host</td><td>Meka-dw</td></tr>
                                     <tr><td>Port</td><td>5432</td></tr>
                                     <tr><td>Database</td><td>postgres</td></tr>
-                                    <tr><td>Schema</td><td>Schema das tabelas</td></tr>
-                                    <tr><td>Username</td><td>Usuário leitura</td></tr>
+                                    <tr><td>Schema</td><td>Schema das tabelas exportadas</td></tr>
+                                    <tr><td>Username</td><td>Usuário somente leitura</td></tr>
                                     <tr><td>Password</td><td>Senha</td></tr>
                                     <tr><td>SSL Mode</td><td>require</td></tr>
                                 </table>
                             </li>
                             <li>Clique em <strong>Test and Save</strong></li>
                         </ol>
+                        <div class="tip">
+                            💡 Use sempre um usuário com permissão <strong>somente leitura</strong> na source para evitar qualquer risco de alteração nos dados de origem.
+                        </div>
                         <h4>Configuração da Destination (Google Sheets)</h4>
                         <ol>
                             <li>Acesse <strong>Destinations</strong> → <strong>+ New Destination</strong></li>
@@ -185,19 +414,22 @@
                             <li>Preencha:
                                 <table>
                                     <tr><th>Campo</th><th>Valor</th></tr>
-                                    <tr><td>Name</td><td>PLANILHA_GESTÃO</td></tr>
-                                    <tr><td>Authentication</td><td>Service Account Key</td></tr>
-                                    <tr><td>Spreadsheet Link</td><td>URL da planilha</td></tr>
+                                    <tr><td>Name</td><td><code>PLANILHA_GESTÃO</code></td></tr>
+                                    <tr><td>Authentication</td><td>Service Account Key (JSON)</td></tr>
+                                    <tr><td>Spreadsheet Link</td><td>URL da planilha de gestão</td></tr>
                                 </table>
                             </li>
-                            <li>Compartilhe com permissão Editor</li>
+                            <li>Compartilhe a planilha com permissão <strong>Editor</strong> para a conta de serviço</li>
                             <li>Clique em <strong>Test and Save</strong></li>
                         </ol>
+                        <div class="tip">
+                            💡 Cada stream (tabela) do PostgreSQL será carregado em uma aba separada da planilha. Nomeie as abas de forma consistente com os nomes das tabelas de origem.
+                        </div>
                         <h4>Configuração do Sync</h4>
                         <ol>
                             <li>Acesse <strong>Connections</strong> → <strong>+ New Connection</strong></li>
                             <li>Selecione source e destination</li>
-                            <li>Configure: Full Refresh — Overwrite, a cada 12 horas</li>
+                            <li>Configure: <strong>Full Refresh — Overwrite</strong>, a cada 12 horas</li>
                             <li>Clique em <strong>Set up connection</strong></li>
                         </ol>
                     </div>
@@ -205,48 +437,53 @@
             </div>
         </details>
 
+        <!-- ===================== PRÓXIMOS PASSOS ===================== -->
         <details>
             <summary>🚀 Próximos Passos</summary>
             <div class="step">
                 <ul>
-                    <li>Importação de APIs para extração de dados</li>
-                    <li>Uso de conector MySQL como Source no Airbyte</li>
-                    <li>Modelagem do Data Warehouse</li>
-                    <li>Implementação de transformações</li>
-                    <li>Integração com Power BI</li>
+                    <li>Integração com FlowUp via conector MySQL no Airbyte</li>
+                    <li>Integração com Agilizatronik, MMGP e VOE via API Rest</li>
+                    <li>Modelagem das camadas <code>stg_</code>, <code>int_</code> e <code>mart_</code> no PostgreSQL</li>
+                    <li>Implementação de transformações com dbt ou SQL puro</li>
+                    <li>Integração com Power BI para visualização</li>
                 </ul>
             </div>
         </details>
 
+        <!-- ===================== BOAS PRÁTICAS ===================== -->
         <details>
             <summary>💡 Boas Práticas</summary>
             <div class="step">
                 <ul>
-                    <li>Nomeie conexões descritivamente</li>
-                    <li>Monitore execuções regularmente</li>
-                    <li>Gerencie credenciais com segurança</li>
-                    <li>Evite editar planilhas manualmente</li>
-                    <li>Escalone horários de sync</li>
+                    <li>Siga sempre os padrões de nomenclatura definidos neste playbook</li>
+                    <li>Nomeie conexões e streams de forma descritiva e consistente com os nomes das tabelas</li>
+                    <li>Monitore execuções regularmente em <strong>Connections → Sync History</strong></li>
+                    <li>Gerencie credenciais com segurança — nunca salve senhas em texto plano ou no repositório</li>
+                    <li>Evite editar planilhas de gestão manualmente — alterações são perdidas no próximo sync</li>
+                    <li>Escalone horários de sync para não sobrecarregar o banco ao mesmo tempo</li>
                 </ul>
             </div>
         </details>
 
+        <!-- ===================== TROUBLESHOOTING ===================== -->
         <details>
             <summary>🔧 Troubleshooting</summary>
             <div class="step">
                 <table>
                     <tr><th>Sintoma</th><th>Causa Possível</th><th>Ação</th></tr>
-                    <tr><td>Teste de conexão falha no Google Sheets</td><td>Planilha não compartilhada</td><td>Compartilhe com Service Account</td></tr>
-                    <tr><td>Dados não aparecem no PostgreSQL</td><td>Aba com nome diferente</td><td>Verifique streams</td></tr>
-                    <tr><td>Planilha não atualizada</td><td>Sync falhando</td><td>Verifique Sync History</td></tr>
-                    <tr><td>Dados duplicados</td><td>Modo incorreto</td><td>Confirme Full Refresh</td></tr>
-                    <tr><td>Sync demora muito</td><td>Volume alto</td><td>Reduza streams</td></tr>
-                    <tr><td>Erro de autenticação</td><td>Credenciais inválidas</td><td>Atualize credenciais</td></tr>
+                    <tr><td>Teste de conexão falha no Google Sheets</td><td>Planilha não compartilhada com a Service Account</td><td>Compartilhe com permissão Leitor/Editor</td></tr>
+                    <tr><td>Dados não aparecem no PostgreSQL</td><td>Nome do stream diferente do esperado</td><td>Verifique e corrija o nome do stream na connection</td></tr>
+                    <tr><td>Planilha de gestão não atualizada</td><td>Sync falhando silenciosamente</td><td>Verifique Sync History e logs de erro</td></tr>
+                    <tr><td>Dados duplicados</td><td>Modo de sync incorreto</td><td>Confirme que está como Full Refresh — Overwrite</td></tr>
+                    <tr><td>Sync demora muito</td><td>Volume alto ou muitos streams</td><td>Reduza streams ou remova colunas desnecessárias</td></tr>
+                    <tr><td>Erro de autenticação</td><td>Credenciais inválidas ou expiradas</td><td>Atualize as credenciais na configuração da source</td></tr>
+                    <tr><td>Tabela criada com nome errado</td><td>Stream name não configurado corretamente</td><td>Verifique o nome do stream e reconfigure a connection</td></tr>
                 </table>
             </div>
         </details>
 
-        <p>Para mais informações, consulte a <a href="https://docs.airbyte.com">documentação oficial do Airbyte</a>.</p>
+        <p>Para mais informações, consulte a <a href="https://docs.airbyte.com">documentação oficial do Airbyte</a> ou o arquivo <code>padrao_nomenclaturas.md</code> no repositório.</p>
     </div>
 
 </body>
