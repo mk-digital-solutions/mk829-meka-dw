@@ -1,0 +1,23 @@
+{{ config(materialized='table') }}
+
+with base_filtrada as (
+    select * from {{ ref('stg_iba_data_raw') }}
+    where data_hora between (select start_time from {{ ref('stg_iba_time_window') }})
+                        and (select end_time from {{ ref('stg_iba_time_window') }})
+),
+
+pivot_tags as (
+    select
+        data_hora,
+        max(case when tag_name = 'EI113RC001\U' then tag_value end) as tensao,
+        max(case when tag_name = 'II113RC001\U' then tag_value end) as corrente
+    from base_filtrada
+    group by 1
+)
+
+select
+    data_hora,
+    tensao,
+    corrente,
+    lag(data_hora) over (order by data_hora) as prev_data_hora
+from pivot_tags

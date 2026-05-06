@@ -1,0 +1,4 @@
+dbt/meu_projeto/.venvomd
+dbt/meu_projeto/IGNORE
+.*venvom.*
+.*__pycache__.*

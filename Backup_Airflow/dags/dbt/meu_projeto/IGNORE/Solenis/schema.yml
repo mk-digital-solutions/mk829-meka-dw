@@ -1,0 +1,88 @@
+version: 2
+
+sources:
+  - name: variables
+    tables:
+      - name: iba_data_raw
+        description: "View legada com o JOIN. Mantida por compatibilidade caso existam modelos antigos."
+        
+      # --- Nossas novas fontes físicas para o "Modo Turbo" ---
+      - name: inspections
+        description: "Tabela física principal de telemetria (Hypertable do TimescaleDB). Contém os valores brutos (value) e os timestamps (dt)."
+      
+      - name: params
+        description: "Tabela dimensão física. Contém o de-para dos IDs dos sensores para os nomes das tags (description)."
+
+models:
+  # =========================================================
+  # 1. STAGING (Extração e Limpeza)
+  # =========================================================
+  - name: stg_iba_data_prod
+    description: "Modelo incremental que puxa somente novos dados do das hypertables params e variables"
+    config:
+      schema: dbt # Vai gerar no PostgreSQL dentro do schema "public_dbt"
+    columns:
+      - name: data_hora
+        description: "Timestamp da leitura do sensor."
+      - name: tag_name
+        description: "Nome do tag do equipamento (ex: Tensão, Corrente, WQI)."
+      - name: tag_value
+        description: "Valor lido no momento."
+
+  # =========================================================
+  # 2. INTERMEDIATE (O Motor do TimescaleDB)
+  # =========================================================
+  - name: int_solenis_pivot
+    description: "Lê a hypertable stg_iba_data_prod e gera colunas com as tags que serão utilizadas pelos dash da solenis."
+    config:
+      schema: dbt
+    columns:
+      - name: data_hora
+        description: "Timestamp cravado de minuto a minuto."
+      - name: fi01507
+        description: "Salva valores da tag FI01507\\U"
+      - name: fic076012
+        description: "Salva valores da tag FIC076012\\PVIN"
+      - name: soda_solenis
+        description: "Salva valores da tag soda_solenis"
+      - name: cl2_solenis
+        description: "Salva valores da tag Calcula"
+      - name: vapor_solenis"
+        description: "Salva valores da tag vapor_solenis"
+        
+  - name: int_solenis_calc
+    description: "Lê a hypertable stg_iba_data_prod e gera colunas com as tags que serão utilizadas pelos dash da solenis."
+    config:
+      schema: dbt
+    columns:
+      - name: data_hora
+        description: "Timestamp cravado de minuto a minuto."
+      - name: venda_cloro
+        description: "Salva valores da tag FI01507\\U"
+      - name: venda_vapor
+        description: "Salva valores da tag FIC076012\\PVIN"
+      - name: soda_solenis
+        description: "Salva valores da tag soda_solenis"
+      - name: cl2_solenis
+        description: "Salva valores da tag Calcula"
+      - name: vapor_solenis
+        description: "Salva valores da tag vapor_solenis"
+        
+  # =========================================================
+  # 3. MARTS (Métricas de Negócio Isoladas)
+  # =========================================================
+  - name: mart_solenis_view
+    description: "Mostra valor mais recente dos dados"
+    config:
+      schema: dbt
+    columns:
+      - name: venda_cloro
+        description: "Salva valores da tag FI01507\\U"
+      - name: venda_vapor
+        description: "Salva valores da tag FIC076012\\PVIN"
+      - name: soda_solenis
+        description: "Salva valores da tag soda_solenis"
+      - name: cl2_solenis
+        description: "Salva valores da tag Calcula"
+      - name: vapor_solenis
+        description: "Salva valores da tag vapor_solenis"

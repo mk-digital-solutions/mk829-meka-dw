@@ -1,0 +1,12 @@
+meu_perfil_postgres: # Nome deve bater com o "profile:" do dbt_project.yml
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: 192.168.0.89      # IP ou hostname do container do banco
+      user: dbt_user
+      password: dbt_pass
+      port: 5435
+      dbname: postgres   # O banco onde estão as tabelas "variables"
+      schema: public   # ONDE o dbt vai salvar as tabelas novas (não misture com o variables!)
+      threads: 1
