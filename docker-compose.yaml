@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   db:
@@ -26,4 +26,4 @@ volumes:
 networks:
   meka-dw-net:
     name: meka-dw-net
-    driver: bridge
+    external: true
