@@ -130,7 +130,7 @@
                     <li><strong>Sistema Operacional (Host):</strong> Windows Server 2025</li>
                     <li><strong>Virtualização:</strong> Hyper-V</li>
                     <li><strong>Máquina Virtual:</strong> Linux (Debian)</li>
-                    <li><strong>IP da VM:</strong> 192.168.0.168</li>
+                    <li><strong>IP da VM:</strong> 192.168.0.156</li>
                 </ul>
                 <h3>Componentes</h3>
                 <ul>
@@ -373,7 +373,7 @@
                             <li>Acesse <strong>Connections</strong> → <strong>+ New Connection</strong></li>
                             <li>Selecione source e destination</li>
                             <li>Renomeie os <strong>streams</strong> conforme os nomes definidos na seção "Fontes de Dados e Tabelas Raw"</li>
-                            <li>Configure: <strong>Full Refresh — Overwrite</strong>, agendamento a cada 12 horas (padrão)</li>
+                            <li>Configure: <strong>Full Refresh — Overwrite</strong>, agendamento a cada 6 horas (padrão)</li>
                             <li>Clique em <strong>Set up connection</strong></li>
                         </ol>
                         <div class="warning">
@@ -442,8 +442,6 @@
             <summary>🚀 Próximos Passos</summary>
             <div class="step">
                 <ul>
-                    <li>Integração com FlowUp via conector MySQL no Airbyte</li>
-                    <li>Integração com Agilizatronik, MMGP e VOE via API Rest</li>
                     <li>Modelagem das camadas <code>stg_</code>, <code>int_</code> e <code>mart_</code> no PostgreSQL</li>
                     <li>Implementação de transformações com dbt ou SQL puro</li>
                     <li>Integração com Power BI para visualização</li>
