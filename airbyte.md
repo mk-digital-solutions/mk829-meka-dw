@@ -67,7 +67,7 @@ Este fluxo extrai dados de cronogramas mantidos em planilhas do Google Sheets e 
 
    | Campo        | Valor / Descrição                                          |
    |--------------|------------------------------------------------------------|
-   | **Name**     | `postgres_mkdw`                                            |
+   | **Name**     | `postgres_cronogramas`                                     |
    | **Host**     | Meka-dw                                                    |
    | **Port**     | `5432`                                                     |
    | **Database** | postgres                                                   |
@@ -84,13 +84,13 @@ Este fluxo extrai dados de cronogramas mantidos em planilhas do Google Sheets e 
 ### Configuração do Sync — Fluxo 1
 
 1. Acesse **Connections** → **+ New Connection**.
-2. Selecione a source `google_sheets_MKXXX` e a destination `postgres_mkdw`.
+2. Selecione a source `google_sheets_MKXXX` e a destination `postgres_cronogramas`.
 3. Configure conforme abaixo:
 
    | Configuração    | Valor                                                                          |
    |-----------------|--------------------------------------------------------------------------------|
    | **Sync Mode**   | Full Refresh — Overwrite                                                       |
-   | **Agendamento** | Conforme necessidade da equipe (foi determinado como padrão "a cada 12 horas") |
+   | **Agendamento** | Conforme necessidade da equipe e limitações da ferramenta (foi determinado como padrão "a cada 6 horas")|
 
 4. Clique em **Set up connection**.
 
@@ -113,12 +113,12 @@ Este fluxo exporta dados do PostgreSQL para uma planilha de gestão no Google Sh
 
    | Campo                  | Valor / Descrição                                           |
    |------------------------|-------------------------------------------------------------|
-   | **Name**               | `postgres_mkdw`                                            |
+   | **Name**               | `postgres_cronogramas`                                      |
    | **Host**               | Meka-dw                                                    |
    | **Port**               | `5432`                                                     |
    | **Database**           | postgres                                                   |
    | **Schema**             | Schema contendo as tabelas a serem exportadas              |
-   | **Username**           | Usuário com permissão de **leitura ou edição** no schema  |
+   | **Username**           | Usuário com permissão de **leitura ou edição** no schema   |
    | **Password**           | Senha do usuário (inserido no conteiner do postgres)       |
    | **SSL Mode**           | `require` (recomendado)                                    |
 
@@ -150,7 +150,7 @@ Este fluxo exporta dados do PostgreSQL para uma planilha de gestão no Google Sh
 ### Configuração do Sync — Fluxo 2
 
 1. Acesse **Connections** → **+ New Connection**.
-2. Selecione a source `postgres_mkdw` e a destination `PLANILHA_GESTÃO`.
+2. Selecione a source `postgres_cronogramas` e a destination `PLANILHA_GESTÃO`.
 3. Configure conforme abaixo:
 
    | Configuração    | Valor                    |
