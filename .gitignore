@@ -6,3 +6,6 @@
 .env
 data/
 pgdata/
+openmetadata-1.11.5/docker-volume/
+Backup_Airflow/dags/__pycache__/
+Backup_Airflow/dags/dbt/meu_projeto/
