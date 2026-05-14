@@ -27,13 +27,13 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 
 
 # --- FUNÇÃO QUE BUSCA OS CRONOGRAMAS NO BANCO ---
-def buscar_cronogramas_atividades(**context):
+def buscar_cronogramas_entregas(**context):
     hook = PostgresHook(postgres_conn_id="mekadw_airflow")
     resultado = hook.get_records("""
         SELECT tablename
         FROM pg_tables
         WHERE schemaname = 'raw_cronogramas'
-          AND tablename ILIKE '%ATIVIDADES%'
+          AND tablename ILIKE 'mk%_00___ENTREGAS'
         ORDER BY tablename
     """)
     cronogramas = [row[0] for row in resultado]
@@ -41,11 +41,11 @@ def buscar_cronogramas_atividades(**context):
 
 
 with DAG(
-    dag_id="dbt_atividades",
+    dag_id="dbt_entregas",
     start_date=datetime(2024, 1, 1),
     schedule="0 3 * * *",
     catchup=False,
-    tags=["dbt", "cronogramas", "atividades"],
+    tags=["dbt", "cronogramas", "entregas"],
     # ✅ CORREÇÃO: faz o Jinja devolver o tipo nativo (lista) em vez de string
     render_template_as_native_obj=True,
     params={
@@ -59,7 +59,7 @@ with DAG(
 
     buscar_cronogramas = PythonOperator(
         task_id="buscar_cronogramas",
-        python_callable=buscar_cronogramas_atividades,
+        python_callable=buscar_cronogramas_entregas,
     )
 
     project_config = ProjectConfig(
@@ -67,7 +67,7 @@ with DAG(
     )
 
     transformacao = DbtTaskGroup(
-        group_id="dbt_run_atividades",
+        group_id="dbt_run_entregas",
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
@@ -77,12 +77,12 @@ with DAG(
                 "analystic_schema": "analytic_cronogramas",
                 # ✅ Com render_template_as_native_obj=True, isso volta como lista real
                 "cronogramas": "{{ ti.xcom_pull(task_ids='buscar_cronogramas', key='cronogramas') }}",
-                "table_types": ["atividades"],
+                "table_types": ["entregas"],
                 "dt_inicio": "{{ params.dt_inicio }}",
                 "dt_fim": "{{ params.dt_fim }}",
                 "modo_debug": "{{ params.modo_debug }}"
             },
-            "select": "atividades",
+            "select": "entregas",
             "threads": "{{ params.num_threads }}",
             "full_refresh": "{{ params.full_refresh }}",
             "args": "--fail-fast",
