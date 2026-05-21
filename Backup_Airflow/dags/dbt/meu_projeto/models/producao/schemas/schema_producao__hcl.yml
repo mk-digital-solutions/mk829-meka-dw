@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  # =========================================================
+  # 1. INTERMEDIATE — Pivot
+  # =========================================================
+  - name: int_producao__hcl_pivot
+    description: >
+      Alinha as três tags do grupo HCl — Producao_HCL, Concentracao_HCL e
+      FIC051025C\PV_IN — em uma linha por dt usando spine de timestamps via UNION.
+      Valores ausentes são zerados via COALESCE.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: "Timestamp da leitura (timestamptz)."
+      - name: producao_raw
+        description: "Valor bruto do contador acumulado de produção de HCl (MIN por dt, filtrado >= 0)."
+      - name: concentracao
+        description: "Concentração de HCl (%) — média por dt da tag Concentracao_HCL."
+      - name: fluxo_raw
+        description: "Valor bruto da tag FIC051025C\\PV_IN — fluxo de entrada usado para calcular capacidade."
+
+  # =========================================================
+  # 2. INTERMEDIATE — Cálculo
+  # =========================================================
+  - name: int_producao__hcl_calc
+    description: >
+      Aplica as regras de negócio do grupo HCl: converte o contador acumulado de
+      Producao_HCL em delta incremental por dt (LAG + GREATEST para evitar
+      negativos); transforma o fluxo bruto em fração de capacidade (/ 495);
+      repassa a concentração sem alteração.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: "Timestamp da leitura."
+      - name: producao_hcl
+        description: "Produção incremental de HCl por dt (toneladas) — delta do contador acumulado, mínimo 0."
+      - name: concentracao
+        description: "Concentração de HCl (%)."
+      - name: capacidade_atual
+        description: "Fração da capacidade instalada em uso (0–1) — fluxo_raw / 495, zerado quando fluxo <= 0."
+
+  # =========================================================
+  # 3. MART — Série temporal para o Grafana
+  # =========================================================
+  - name: producao__hcl
+    description: >
+      View final do grupo HCl — série temporal de produção incremental,
+      concentração e capacidade atual, filtrada pelo time_window. Substitui as
+      queries diretas a iba_data_raw nos painéis 65, 58 e 62 do dashboard
+      Produção [03/2026].
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: "Timestamp da leitura."
+      - name: producao_hcl
+        description: "Produção incremental de HCl por dt (toneladas)."
+      - name: concentracao
+        description: "Concentração de HCl (%)."
+      - name: capacidade_atual
+        description: "Fração da capacidade instalada em uso (0–1)."

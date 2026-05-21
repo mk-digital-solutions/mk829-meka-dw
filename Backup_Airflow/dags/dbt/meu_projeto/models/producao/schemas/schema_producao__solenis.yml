@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: int_producao__solenis_pivot
+    description: >
+      Spine temporal dos sensores de venda do grupo solenis, com granularidade de 1 minuto. Contém as leituras brutas de:
+      cloro (FI01507\U), vapor (FIC076012\PV_IN) e soda (Soda_solenis).
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: venda_cloro
+        description: Leitura bruta de fluxo de cloro (FI01507\U).
+      - name: venda_vapor
+        description: Leitura bruta de fluxo de vapor (FIC076012\PV_IN).
+      - name: venda_soda
+        description: Leitura bruta de fluxo de soda (Soda_solenis).
+
+  - name: int_producao__solenis_calc
+    description: >
+      Aplica filtro de negativos e gera flags de "sem venda" por minuto:
+      sem_cloro (venda <= 0.2), sem_vapor e sem_soda (venda <= 0).
+      O painel Grafana soma esses flags para calcular o tempo sem venda.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: venda_cloro
+        description: Fluxo de cloro (negativos zerados).
+      - name: venda_vapor
+        description: Fluxo de vapor (negativos zerados).
+      - name: venda_soda
+        description: Fluxo de soda (negativos zerados).
+      - name: sem_cloro
+        description: "Flag: 1 se venda_cloro <= 0.2, 0 caso contrário."
+      - name: sem_vapor
+        description: "Flag: 1 se venda_vapor <= 0, 0 caso contrário."
+      - name: sem_soda
+        description: "Flag: 1 se venda_soda <= 0, 0 caso contrário."
+
+  - name: producao__solenis
+    description: >
+      Série temporal de vendas e flags de ausência de venda, filtrada pela
+      time_window. O painel Grafana realiza COUNT(sem_X = 1) para calcular
+      o tempo total sem venda no intervalo 7h-7h.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: venda_cloro
+        description: Fluxo de cloro.
+      - name: venda_vapor
+        description: Fluxo de vapor.
+      - name: venda_soda
+        description: Fluxo de soda.
+      - name: sem_cloro
+        description: Flag de ausência de venda de cloro (0 ou 1).
+      - name: sem_vapor
+        description: Flag de ausência de venda de vapor (0 ou 1).
+      - name: sem_soda
+        description: Flag de ausência de venda de soda (0 ou 1).

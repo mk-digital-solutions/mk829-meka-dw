@@ -1,0 +1,72 @@
+version: 2
+
+models:
+  - name: int_producao__hipo_pivot
+    description: >
+      Spine temporal unindo os 4 sensores do grupo Hipo:
+      NaCl (FI_NaCl0\U), NaOH (FIC12702\PV_IN), água (FIC12703\PV_IN)
+      e variável manipulada de Cl2 (FIC12718\MV).
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: naclo_raw
+        description: Vazão bruta de NaClO (FI_NaCl0\U).
+      - name: naoh_raw
+        description: Vazão bruta de NaOH (FIC12702\PV_IN).
+      - name: agua_raw
+        description: Vazão bruta de água (FIC12703\PV_IN).
+      - name: cl2_raw
+        description: Variável manipulada do controlador de Cl2 em % (FIC12718\MV).
+
+  - name: int_producao__hipo_calc
+    description: >
+      Aplica conversões de unidade, filtros e cálculos de produção:
+      NaClO em ton (÷60000), consumo de NaOH (×357), capacidade (×350/15),
+      zeragem de negativos, flag cl2_on, consumo de cloro instantâneo
+      e produção de hipo em toneladas.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: naclo
+        description: Produção de NaClO em ton (FI_NaCl0\U / 60000, negativos = 0).
+      - name: consumo_naoh
+        description: Consumo de NaOH em unidade de processo (FIC12702\PV_IN × 357, negativos = 0).
+      - name: capacidade
+        description: Capacidade de produção em % (FIC12702\PV_IN × 350/15).
+      - name: vazao_agua
+        description: Vazão de água, negativos zerados (FIC12703\PV_IN).
+      - name: cl2_on
+        description: Flag = 1 se Cl2 está ligado (FIC12718\MV >= 1), 0 caso contrário.
+      - name: consumo_cloro
+        description: Consumo de cloro instantâneo calculado ((consumo_naoh×1560 + vazao_agua×1210) / 60000).
+      - name: producao_hipo_ton
+        description: Produção de hipoclorito em toneladas por intervalo ((naoh×1560 + agua×1210) × cl2_on / 60000).
+
+  - name: producao__hipo
+    description: >
+      Série temporal filtrada pela time_window com métricas de hipoclorito:
+      produção de NaClO, consumo de NaOH, capacidade, vazão de água,
+      flag de operação, consumo de cloro e produção em toneladas.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: naclo
+        description: Produção de NaClO em ton.
+      - name: consumo_naoh
+        description: Consumo de NaOH em unidade de processo.
+      - name: capacidade
+        description: Capacidade de produção em %.
+      - name: vazao_agua
+        description: Vazão de água.
+      - name: cl2_on
+        description: Flag de Cl2 ligado (0 ou 1).
+      - name: consumo_cloro
+        description: Consumo de cloro instantâneo (painel 73).
+      - name: producao_hipo_ton
+        description: Produção acumulada de hipoclorito em toneladas (painel 123 — reduzir com SUM).

@@ -1,8 +1,0 @@
-select
-    sum(
-        case when tensao > 227 and corrente > 2.8 and prev_data_hora is not null 
-             then extract(epoch from (data_hora - prev_data_hora)) 
-             else 0 
-        end
-    ) * 91 as total_weighted_duration
-from {{ ref('int_iba_pivot_raw') }}

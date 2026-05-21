@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: int_compressao_liquefacao__comp_sabroe_2_pivot
+    description: >
+      Spine de timestamps para o Sabroe 02. União de todos os data_hora das dez
+      tags monitoradas, com LEFT JOIN de cada tag e COALESCE(0) para ausências.
+    config:
+      schema: dbt_compressao_liquefacao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: corrente
+        description: Corrente do Sabroe 02 (A).
+      - name: capacidade
+        description: Capacidade do Sabroe 02 (%).
+      - name: pressao_descarga
+        description: Pressão de descarga do Sabroe 02 (bar).
+      - name: temp_descarga
+        description: Temperatura de descarga do Sabroe 02 (°C).
+      - name: pressao_oleo
+        description: Pressão do óleo do Sabroe 02 (bar).
+      - name: temp_oleo
+        description: Temperatura do óleo do Sabroe 02 (°C).
+      - name: superaquecimento_aspiracao
+        description: Superaquecimento de aspiração do Sabroe 02 (°C).
+      - name: pressao_aspiracao
+        description: Pressão de aspiração do Sabroe 02 (bar).
+      - name: temp_processo
+        description: Temperatura de processo do Sabroe 02 (°C).
+      - name: temp_aspiracao
+        description: Temperatura de aspiração do Sabroe 02 (°C).
+
+  - name: compressao_liquefacao__comp_sabroe_2
+    description: >
+      Mart incremental com série temporal do compressor Sabroe 02. Consolida
+      corrente, capacidade e variáveis de pressão/temperatura em uma linha por
+      timestamp, com hypertable e retenção de 30 dias.
+    config:
+      schema: dbt_compressao_liquefacao
+    columns:
+      - name: dt
+        description: Timestamp do registro (timestamptz).
+      - name: corrente
+        description: Corrente do Sabroe 02 (A).
+      - name: capacidade
+        description: Capacidade do Sabroe 02 (%).
+      - name: pressao_descarga
+        description: Pressão de descarga (bar).
+      - name: temp_descarga
+        description: Temperatura de descarga (°C).
+      - name: pressao_oleo
+        description: Pressão do óleo (bar).
+      - name: temp_oleo
+        description: Temperatura do óleo (°C).
+      - name: superaquecimento_aspiracao
+        description: Superaquecimento de aspiração (°C).
+      - name: pressao_aspiracao
+        description: Pressão de aspiração (bar).
+      - name: temp_processo
+        description: Temperatura de processo (°C).
+      - name: temp_aspiracao
+        description: Temperatura de aspiração (°C).

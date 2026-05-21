@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: int_producao__estoque_cloro_pivot
+    description: >
+      Leituras brutas de peso dos tanques de Cl2 líquido
+      (tags LIKE 'Peso%Tanque%0%'). Uma linha por (timestamp, tanque).
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: tanque
+        description: Identificador do tanque (tag_name).
+      - name: peso_bruto
+        description: Leitura bruta de peso do tanque.
+
+  - name: int_producao__estoque_cloro_calc
+    description: >
+      Agrega o peso total de Cl2 por timestamp: filtra valores fora de
+      [-900, 130000] e converte a soma de gramas para toneladas (÷1000).
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: peso_total_ton
+        description: Estoque total de Cl2 líquido em toneladas.
+
+  - name: producao__estoque_cloro
+    description: >
+      Série temporal do estoque total de Cl2 líquido (ton),
+      filtrada pela time_window.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: peso_total_ton
+        description: Estoque total de Cl2 líquido em toneladas.

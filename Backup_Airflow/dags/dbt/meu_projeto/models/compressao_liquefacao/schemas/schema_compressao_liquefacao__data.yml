@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stg_compressao_liquefacao_data
+    description: >
+      View de staging que filtra todas as tags dos compressores Sabroe 01 e Sabroe 02
+      (corrente, capacidade, pressões e temperaturas) dentro da janela de tempo
+      definida por stg_time_window.
+    config:
+      schema: dbt_compressao_liquefacao
+    columns:
+      - name: data_hora
+        description: Timestamp da leitura do sensor.
+      - name: tag_name
+        description: "Nome do tag (ex: Corrente - Sabroe 01)."
+      - name: tag_value
+        description: Valor lido no momento.
+
+  - name: var_compressao_liquefacao__tags
+    description: >
+      View que lista os parâmetros disponíveis para o dropdown $Tags do Grafana,
+      removendo o sufixo "- Sabroe 01/02". Equivale ao SELECT DISTINCT da variável
+      de template do dashboard.
+    config:
+      schema: dbt_compressao_liquefacao
+    columns:
+      - name: tags
+        description: "Nome do parâmetro sem sufixo de compressor (ex: Temperatura de Processo)."

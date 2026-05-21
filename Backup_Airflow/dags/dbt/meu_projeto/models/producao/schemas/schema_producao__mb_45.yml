@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  # =========================================================
+  # 1. INTERMEDIATE — Pivot
+  # =========================================================
+  - name: int_producao__mb_45_pivot
+    description: >
+      Mescla as três fontes do grupo MB_45 — tensão (EI113RC001\U), status da
+      planta (Planta Membrana Ligada) e corrente (II113RC001\U) — em uma
+      granularidade de uma linha por dt. A tensão é o eixo principal do JOIN.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: "Timestamp da leitura (timestamptz)."
+      - name: soma_tensao
+        description: "Tensão média por eletrodo já calculada (V) — gate pela planta + divisão por 92. (calculated, não armazenar)."
+      - name: planta_membrana_ligada
+        description: "Status da planta no mesmo dt (1 = ligada, 0 = desligada ou sem leitura)."
+      - name: corrente
+        description: "Corrente lida da tag II113RC001\\U no mesmo dt (0 quando ausente)."
+
+  # =========================================================
+  # 2. INTERMEDIATE — Cálculo
+  # =========================================================
+  - name: int_producao__mb_45_calc
+    description: >
+      Aplica as regras de negócio do MB_45: tensão efetiva (soma / 92, zerada quando desligada),
+      corrente repassada sem alteração. Inclui performance diária (disponibilidade e eficiência)
+      unida por date_trunc(day, dt) a partir dos _components membrana_on e eficiencia.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: "Timestamp da leitura."
+      - name: tensao_media
+        description: "Tensão média por eletrodo (V) — gate pela planta + divisão por 92."
+      - name: corrente
+        description: "Corrente (kA) lida da tag II113RC001\\U."
+      - name: horas_on
+        description: "Horas de operação no dia (repetido por minuto via join diário)."
+      - name: disponibilidade
+        description: "Percentual de disponibilidade (horas_on / 24 x 100, cap 100%)."
+      - name: eficiencia
+        description: "Eficiência percentual (eficiencia x 100)."
+
+  # =========================================================
+  # 3. MART — Série temporal para o Grafana
+  # =========================================================
+  - name: producao__mb_45
+    description: >
+      Mart unificado do grupo MB_45. Combina a série temporal por minuto
+      (corrente e tensao) com as metricas diarias de performance (disponibilidade,
+      eficiencia) e producao de Cl2 (producao_cl2, plan_diario).
+      As colunas diarias repetem o valor do dia em cada minuto via LEFT JOIN
+      por date_trunc(day, dt).
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp da leitura (granularidade por minuto).
+      - name: corrente
+        description: Corrente em kA (II113RC001\U).
+      - name: tensao_media
+        description: Tensão média por eletrodo (V) — gate pela planta + divisão por 92.
+      - name: horas_on
+        description: Horas de operacao no dia (repetido por minuto).
+      - name: disponibilidade
+        description: Disponibilidade percentual do dia (horas_on / 24 x 100).
+      - name: eficiencia
+        description: Eficiencia de producao percentual do dia.
+      - name: producao_cl2
+        description: Producao diaria de Cl2 em ton (repetida por minuto).
+      - name: plan_diario
+        description: Setpoint diario de 42.7 ton (repetido por minuto).
+
+  # =========================================================
+  # 4. INTERMEDIATES — Performance e Producao (diários)
+  # =========================================================
+  - name: util_producao__mb_45_membrana_on
+    description: Série diária de tempo de operação da membrana (segundos e horas). Replica acum_membrana_on com forward fill da corrente (II113RC001\U).
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Data (timestamptz, granularidade diária).
+      - name: segundos_on
+        description: Segundos em que corrente > 2.8 no dia.
+      - name: horas_on
+        description: Horas em que corrente > 2.8 no dia.
+
+  - name: util_producao__mb_45_sum_on_cell
+    description: Série diária de cell-segundos. Replica acum_sum_on_cell com filtro tensão > 227 AND corrente > 2.8, somando intervalo x 91 células por dia.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Data (timestamptz, granularidade diária).
+      - name: cell_segundos
+        description: Soma de (duração_intervalo_s x 91) para intervalos válidos.
+
+  - name: util_producao__mb_45_eficiencia
+    description: Série diária de eficiência de produção. Replica acum_eficiencia_prod usando sensor_value de WQI13107_100\U, corrente filtrada, n_cell e horas_on.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Data (timestamptz, granularidade diária).
+      - name: eficiencia
+        description: Eficiência de produção (razão, sem multiplicar por 100).
+

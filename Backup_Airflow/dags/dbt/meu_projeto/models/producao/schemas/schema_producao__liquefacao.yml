@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: int_producao__liquefacao_pivot
+    description: >
+      Série longa com leituras brutas de peso dos tanques de Cl2 (LIKE Peso%Tanque%),
+      enriquecida com status dos compressores CPC (A, B, C, 3) e capacidade
+      dos Sabroes (01, 02) via LEFT JOIN por timestamp.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: tanque
+        description: Identificador do tanque (tag_name).
+      - name: peso_bruto
+        description: Leitura bruta de peso do tanque (sem filtro de validade).
+      - name: status_cpc_a
+        description: Status do compressor CPC-A (YLL CCL-COM-CPC - A).
+      - name: status_cpc_b
+        description: Status do compressor CPC-B (YLL CCL-COM-CPC- B).
+      - name: status_cpc_c
+        description: Status do compressor CPC-C (YLL CCL-COM-CPC - C).
+      - name: status_cpc_3
+        description: Status do compressor CPC-3 (YLL CCL-COM-CPC- 3).
+      - name: cap_sabroe_01
+        description: Capacidade do compressor Sabroe 01.
+      - name: cap_sabroe_02
+        description: Capacidade do compressor Sabroe 02.
+
+  - name: int_producao__liquefacao_calc
+    description: >
+      Calcula a taxa de compressao (kg/h) por tanque via regressao linear
+      sobre os ultimos 10 registros. Filtra valores fora de [-900, 130000]
+      e taxas >= 4500 (ruido). Propaga status dos compressores e Sabroes.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: tanque
+        description: Identificador do tanque.
+      - name: taxa_compressao
+        description: Taxa de compressao em kg/h (slope linear x 3600).
+      - name: status_cpc_a
+        description: Status do compressor CPC-A.
+      - name: status_cpc_b
+        description: Status do compressor CPC-B.
+      - name: status_cpc_c
+        description: Status do compressor CPC-C.
+      - name: status_cpc_3
+        description: Status do compressor CPC-3.
+      - name: cap_sabroe_01
+        description: Capacidade do Sabroe 01.
+      - name: cap_sabroe_02
+        description: Capacidade do Sabroe 02.
+
+  - name: producao__liquefacao
+    description: >
+      Serie temporal por tanque com taxa de compressao de Cl2 liquido e status
+      dos compressores CPC e Sabroe, filtrada pela time_window.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: tanque
+        description: Identificador do tanque.
+      - name: taxa_compressao
+        description: Taxa de compressao em kg/h.
+      - name: status_cpc_a
+        description: Status do compressor A (0/1).
+      - name: status_cpc_b
+        description: Status do compressor B (0/1).
+      - name: status_cpc_c
+        description: Status do compressor C (0/1).
+      - name: status_cpc_3
+        description: Status do compressor 3 (0/1).
+      - name: cap_sabroe_01
+        description: Capacidade do Sabroe 01.
+      - name: cap_sabroe_02
+        description: Capacidade do Sabroe 02.

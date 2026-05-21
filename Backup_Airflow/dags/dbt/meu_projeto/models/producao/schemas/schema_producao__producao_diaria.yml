@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: int_producao__producao_diaria_pivot
+    description: >
+      Spine temporal unindo os 9 sensores do grupo producao_diaria.
+      Cada linha representa um timestamp com valores brutos de todas as fontes.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: producao_soda_raw
+        description: Valor acumulado bruto do totalizador de soda (WQI13107_100\V).
+      - name: producao_hcl_raw
+        description: Valor acumulado bruto do totalizador de HCl (Producao_HCL).
+      - name: naoh_raw
+        description: Vazão bruta de NaOH (FIC12702\PV_IN).
+      - name: agua_raw
+        description: Vazão bruta de água (FIC12703\PV_IN).
+      - name: cl2_raw
+        description: Variável manipulada do controlador de Cl2 em % (FIC12718\MV).
+      - name: cl2_liquido_raw
+        description: Vazão bruta de Cl2 líquido (FI01507\U).
+      - name: demanda_raw
+        description: Demanda elétrica bruta em W (Demanda Variável).
+      - name: tensao_ff
+        description: Tensão média FF (Tensão Média FF).
+      - name: fator_potencia
+        description: Fator de potência (Fator de Potência).
+
+  - name: int_producao__producao_diaria_calc
+    description: >
+      Aplica lógica de negócio: delta de produção acumulada para soda e HCl,
+      zeragem de negativos, flag cl2_on, conversão de demanda W→kW
+      e passagem de cl2_liquido com zeragem de negativos.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: producao_soda
+        description: Incremento de produção de soda por intervalo (ton equivalente).
+      - name: producao_hcl
+        description: Incremento de produção de HCl por intervalo.
+      - name: vazao_naoh
+        description: Vazão de NaOH (FIC12702\PV_IN).
+      - name: vazao_agua
+        description: Vazão de água, negativos zerados (FIC12703\PV_IN).
+      - name: cl2_on
+        description: Flag = 1 se Cl2 está ligado (FIC12718\MV >= 1), 0 caso contrário.
+      - name: cl2_liquido
+        description: Vazão de Cl2 líquido, negativos zerados (FI01507\U).
+      - name: demanda
+        description: Demanda elétrica em kW (Demanda Variável / 1000).
+      - name: tensao_ff
+        description: Tensão média FF.
+      - name: fator_potencia
+        description: Fator de potência.
+
+  - name: producao__producao_diaria
+    description: >
+      Série temporal filtrada pela time_window com as métricas de produção diária:
+      soda, HCl, fluxos, Cl2 líquido, demanda elétrica, tensão, fator de potência,
+      produção Cl2, plano diário, consumo kWh e eficiência energética.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: producao_soda
+        description: Incremento de produção de soda por intervalo.
+      - name: producao_hcl
+        description: Incremento de produção de HCl por intervalo.
+      - name: vazao_naoh
+        description: Vazão de NaOH.
+      - name: vazao_agua
+        description: Vazão de água.
+      - name: cl2_on
+        description: Flag de Cl2 ligado (0 ou 1).
+      - name: cl2_liquido
+        description: Vazão de Cl2 líquido (FI01507\U), negativos zerados. Usado no painel 158 (SUM / 105 = ton/mês).
+      - name: demanda
+        description: Demanda elétrica em kW.
+      - name: tensao_ff
+        description: Tensão média FF.
+      - name: fator_potencia
+        description: Fator de potência.
+      - name: producao_cl2
+        description: Produção de Cl2 do dia em toneladas (valor diário repetido por minuto).
+      - name: plan_diario
+        description: Setpoint de produção diária em toneladas (42.7 ton/dia fixo).
+      - name: kwh_diario
+        description: Consumo de energia do dia em kWh (dashboard.geral_hist — total_kwh_diario, valor diário repetido por minuto).
+      - name: kwh_por_ton
+        description: Eficiência energética diária em kWh/ton Cl2 (CEIL(kwh_diario / producao_cl2)). Painel 113.

@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: int_producao__estoque_hipo_pivot
+    description: >
+      Leituras brutas de nível dos tanques de hipoclorito
+      (tags LIKE 'LI0264%\U'). Uma linha por (timestamp, sensor).
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: sensor
+        description: Identificador do sensor (tag_name).
+      - name: nivel_bruto
+        description: Leitura bruta de nível do tanque.
+
+  - name: int_producao__estoque_hipo_calc
+    description: >
+      Agrega o nível total de hipoclorito por timestamp: filtra valores fora de
+      [-900, 130000] e aplica fator de capacidade de 95%.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: nivel_total
+        description: Nível total de hipoclorito (soma × 0,95).
+
+  - name: producao__estoque_hipo
+    description: >
+      Série temporal do nível total de hipoclorito, filtrada pela time_window.
+    config:
+      schema: dbt_producao
+    columns:
+      - name: dt
+        description: Timestamp do registro.
+      - name: nivel_total
+        description: Nível total de hipoclorito (fator 95%).

@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: variables
+    #schema: variables          # nome do schema das tabelas físicas no Postgres
+    tables:
+      - name: params
+      - name: inspections
