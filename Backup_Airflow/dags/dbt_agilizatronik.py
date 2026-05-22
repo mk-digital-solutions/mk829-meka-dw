@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from airflow import DAG
 from airflow.sdk import Param
-from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, ExecutionConfig
+from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, ExecutionConfig, RenderConfig
 from cosmos.profiles import PostgresUserPasswordProfileMapping
 
 # --- CONFIGURAÇÕES BÁSICAS ---
@@ -16,7 +16,7 @@ profile_config = ProfileConfig(
     target_name="dev",
     profile_mapping=PostgresUserPasswordProfileMapping(
         conn_id="mekadw_airflow",
-        profile_args={"schema": "raw_agilizatronik", "dbname": "postgres"}
+        profile_args={"schema": "mart", "dbname": "postgres"}
     ),
 )
 
@@ -41,11 +41,14 @@ with DAG(
         dbt_project_path=DBT_PROJECT_PATH,
     )
 
+    render_config = RenderConfig(select=["agilizatronik"])
+
     transformacao = DbtTaskGroup(
         group_id="dbt_run_agilizatronik",
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
+        render_config=render_config,
         operator_args={
             "vars": {
                 "raw_schema": "raw_agilizatronik",

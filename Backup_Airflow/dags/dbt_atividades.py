@@ -18,7 +18,7 @@ profile_config = ProfileConfig(
     target_name="dev",
     profile_mapping=PostgresUserPasswordProfileMapping(
         conn_id="mekadw_airflow",
-        profile_args={"schema": "raw_cronogramas", "dbname": "postgres"}
+        profile_args={"schema": "mart", "dbname": "postgres"}
     ),
 )
 

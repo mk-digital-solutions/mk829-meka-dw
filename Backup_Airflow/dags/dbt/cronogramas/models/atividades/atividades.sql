@@ -2,7 +2,7 @@
 
 {{ config(
     materialized='table',
-    schema='marts',
+    schema='cronogramas',
     alias='fct_atividades'
 ) }}
 
