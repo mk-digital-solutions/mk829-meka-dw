@@ -2,7 +2,7 @@
 
 {{ config(
     materialized='table',
-    schema='agilizatronik',
+    schema='_stg_agilizatronik',
     alias='fct_agilizatronik'
 ) }}
 
