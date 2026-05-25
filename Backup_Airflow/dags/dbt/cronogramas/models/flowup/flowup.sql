@@ -60,7 +60,7 @@
             {% endif %}
         {% endfor %}
 
-        {% set limit_clause = ' LIMIT 100' if debug else '' %}
+        {% set limit_clause = '' %}
 
         {% set ddl_drop = 'DROP TABLE IF EXISTS ' ~ target_schema_full ~ '."' ~ tabela ~ '" CASCADE' %}
         {% set ddl_create = 'CREATE TABLE ' ~ target_schema_full ~ '."' ~ tabela ~ '" AS SELECT ' ~ (select_parts | join(', ')) ~ ' FROM ' ~ raw_schema ~ '."' ~ tabela ~ '"' ~ limit_clause %}

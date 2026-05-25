@@ -33,4 +33,3 @@ SELECT
     "IsConclusionNotified"
 
 FROM {{ stg_schema }}."fct_agilizatronik"
-{% if debug %} LIMIT 100 {% endif %}

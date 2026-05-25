@@ -45,4 +45,3 @@ SELECT
     LOWER(SUBSTRING(tabela_origem FROM '(?i)mk[0-9]+')) as codigo_cronograma,
     *
 FROM source_data
-{% if debug %} LIMIT 100 {% endif %}

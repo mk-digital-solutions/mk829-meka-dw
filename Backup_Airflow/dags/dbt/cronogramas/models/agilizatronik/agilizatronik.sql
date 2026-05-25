@@ -64,4 +64,3 @@ SELECT
     "IsConclusionNotified"
 
 FROM {{ raw_schema }}."fct_Meka_OData_Agilizatronik"
-{% if debug %} LIMIT 100 {% endif %}
