@@ -27,8 +27,9 @@ SELECT
         )
     ) AS "Body",
 
-    "Status",
-    "Priority",
+    -- Remove o prefixo "_N_" (ex.: "_7_COMPLETED" -> "COMPLETED")
+    regexp_replace("Status", '^_\d+_', '') AS "Status",
+    regexp_replace("Priority", '^_\d+_', '') AS "Priority",
 
     -- Extrai FullName de cada elemento do array JSON, separados por vírgula
     (
