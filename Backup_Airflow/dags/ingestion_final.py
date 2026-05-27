@@ -9,7 +9,7 @@ from cosmos.operators.local import DbtDocsLocalOperator
 
 # --- CONFIGURAÇÕES DO AMBIENTE DOCKER ---
 BASE_DIR = "/opt/airflow"
-DBT_PROJECT_PATH = os.path.join(BASE_DIR, "dags/dbt/meu_projeto")
+DBT_PROJECT_PATH = os.path.join(BASE_DIR, "dags/dbt/meka-dw")
 DBT_EXECUTABLE = "dbt" # ou "/home/airflow/.local/bin/dbt"
 
 # --- VALIDAÇÃO DE SEGURANÇA ---
@@ -21,7 +21,7 @@ profile_config = ProfileConfig(
     profile_name="meu_perfil_postgres",
     target_name="dev",
     profile_mapping=PostgresUserPasswordProfileMapping(
-        conn_id="db_conn",
+        conn_id="mekadw_airflow",
         profile_args={
             "schema": "public",
             "dbname": "postgres"}

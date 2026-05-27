@@ -8,7 +8,7 @@ from cosmos.operators.local import DbtDocsLocalOperator
 
 # --- CONFIGURAÇÕES ---
 BASE_DIR = "/opt/airflow"
-DBT_PROJECT_PATH = os.path.join(BASE_DIR, "dags/dbt/meu_projeto")
+DBT_PROJECT_PATH = os.path.join(BASE_DIR, "dags/dbt/meka-dw")
 TARGET_FINAL = os.path.join(DBT_PROJECT_PATH, "target") 
 DBT_EXECUTABLE = "dbt"
 
@@ -53,18 +53,18 @@ def salvar_artefatos_no_disco(project_dir: str, **kwargs):
 
 # --- CONFIGURAÇÃO DO PERFIL ---
 profile_config = ProfileConfig(
-    profile_name="meu_perfil_postgres",
+    profile_name="meka_dw_postgres",
     target_name="dev",
     profile_mapping=PostgresUserPasswordProfileMapping(
-        conn_id="clorum",
-        profile_args={"schema": "public", "dbname": "postgres"}
+        conn_id="mekadw_airflow",
+        profile_args={"schema": "raw_cronogramas", "dbname": "postgres"}
     ),
 )
 
 execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 
 with DAG(
-    dag_id="dbt_cosmos_apenas_docs",
+    dag_id="gera_docs_dbt",
     start_date=datetime(2024, 1, 1),
     schedule=None,
     catchup=False,

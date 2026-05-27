@@ -7,7 +7,7 @@ from cosmos.profiles import PostgresUserPasswordProfileMapping
 
 # --- CONFIGURAÇÕES BÁSICAS ---
 BASE_DIR = "/opt/airflow"
-DBT_PROJECT_PATH = os.path.join(BASE_DIR, "dags/dbt/cronogramas")
+DBT_PROJECT_PATH = os.path.join(BASE_DIR, "dags/dbt/meka-dw")
 DBT_EXECUTABLE = "/home/airflow/.local/bin/dbt"
 
 # --- CONFIGURAÇÃO DO PERFIL (Conexão Segura) ---
