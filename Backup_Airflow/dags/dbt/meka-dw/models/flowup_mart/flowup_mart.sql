@@ -1,25 +1,22 @@
--- dbt/models/mmgp/mmgp.sql
+-- dbt/models/flowup_mart/flowup_mart.sql
 
 {{ config(
     materialized='table',
-    schema='mmgp',
-    alias='mmgp_log_execucao'
+    schema='flowup',
+    alias='flowup_log_execucao'
 ) }}
 
-{% set raw_schema = var('raw_schema', 'raw_mmgp') %}
-{% set target_schema_full = target.schema ~ '_mmgp' %}
+{% set raw_schema = var('raw_schema', 'raw_flowup') %}
+{% set target_schema_full = target.schema ~ '_flowup' %}
 {% set debug = var('modo_debug', False) %}
 
-{# Palavras-chave no nome da coluna que disparam a marcação de moeda (R$) #}
-{% set currency_keywords = ['cost', 'comission', 'value'] %}
-
 {# ------------------------------------------------------------------
-   1. Garante a existência do schema de destino (mart_mmgp)
+   1. Garante a existência do schema de destino (mart_flowup)
 ------------------------------------------------------------------- #}
 {% if execute %}
     {% do run_query("CREATE SCHEMA IF NOT EXISTS " ~ target_schema_full) %}
 
-    {# 2. Lista todas as tabelas presentes no schema raw_mmgp #}
+    {# 2. Lista todas as tabelas presentes no schema raw_flowup #}
     {% set tabelas_query %}
         SELECT table_name
         FROM information_schema.tables
@@ -48,29 +45,12 @@
         {% for row in cols_result.rows %}
             {% set col_name = row[0] %}
             {% set col_type = row[1] | lower %}
-            {% set col_name_lower = col_name | lower %}
-
-            {# Verifica se o nome da coluna contém alguma palavra-chave de moeda #}
-            {% set is_currency = false %}
-            {% for kw in currency_keywords %}
-                {% if kw in col_name_lower %}
-                    {% set is_currency = true %}
-                {% endif %}
-            {% endfor %}
 
             {% if col_type in ['character varying', 'varchar', 'text', 'character', 'char', 'bpchar', 'name', 'citext'] %}
-                {% if is_currency %}
-                    {% do select_parts.append("('R$ ' || COALESCE(\"" ~ col_name ~ "\", 'vazio')) AS \"" ~ col_name ~ "\"") %}
-                {% else %}
-                    {% do select_parts.append('COALESCE("' ~ col_name ~ '", ' ~ "'vazio'" ~ ') AS "' ~ col_name ~ '"') %}
-                {% endif %}
+                {% do select_parts.append('COALESCE("' ~ col_name ~ '", ' ~ "'vazio'" ~ ') AS "' ~ col_name ~ '"') %}
 
             {% elif col_type in ['integer', 'bigint', 'smallint', 'numeric', 'decimal', 'real', 'double precision', 'money'] %}
-                {% if is_currency %}
-                    {% do select_parts.append("('R$ ' || COALESCE(\"" ~ col_name ~ "\", 0)::text) AS \"" ~ col_name ~ "\"") %}
-                {% else %}
-                    {% do select_parts.append('COALESCE("' ~ col_name ~ '", 0) AS "' ~ col_name ~ '"') %}
-                {% endif %}
+                {% do select_parts.append('COALESCE("' ~ col_name ~ '", 0) AS "' ~ col_name ~ '"') %}
 
             {% elif 'timestamp' in col_type or col_type == 'date' %}
                 {% do select_parts.append('COALESCE("' ~ col_name ~ '"::text, ' ~ "'0000-00-00 00:00:00.000'" ~ ') AS "' ~ col_name ~ '"') %}
@@ -87,12 +67,12 @@
 
         {% do run_query(ddl_drop) %}
         {% do run_query(ddl_create) %}
-        {% do log('[mmgp] Tabela transformada: ' ~ target_schema_full ~ '.' ~ tabela, info=True) %}
+        {% do log('[flowup] Tabela transformada: ' ~ target_schema_full ~ '.' ~ tabela, info=True) %}
 
     {% endfor %}
 {% endif %}
 
--- Tabela de log: registra a execução do modelo mmgp
+-- Tabela de log: registra a execução do modelo flowup
 SELECT
     '{{ run_started_at }}'::timestamp AS execucao_at,
     '{{ raw_schema }}'                AS schema_origem,

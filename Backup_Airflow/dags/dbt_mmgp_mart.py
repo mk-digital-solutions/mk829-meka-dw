@@ -25,11 +25,11 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 
 
 with DAG(
-    dag_id="dbt_flowup_mart",
+    dag_id="dbt_mmgp_mart",
     start_date=datetime(2024, 1, 1),
     schedule="0 3 * * *",
     catchup=False,
-    tags=["dbt", "flowup", "mart"],
+    tags=["dbt", "mmgp", "mart"],
     params={
         "modo_debug": Param(False, type="boolean", description="Ativar modo debug? (Limita registros)"),
         "full_refresh": Param(False, type="boolean", description="Forçar full refresh das tabelas?"),
@@ -41,20 +41,20 @@ with DAG(
         dbt_project_path=DBT_PROJECT_PATH,
     )
 
-    render_config = RenderConfig(select=["flowup_mart"])
+    render_config = RenderConfig(select=["mmgp_mart"])
 
     transformacao = DbtTaskGroup(
-        group_id="dbt_run_flowup_mart",
+        group_id="dbt_run_mmgp_mart",
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
         render_config=render_config,
         operator_args={
             "vars": {
-                "raw_schema": "raw_flowup",
+                "raw_schema": "raw_mmgp",
                 "modo_debug": "{{ params.modo_debug }}",
             },
-            "select": "flowup_mart",
+            "select": "mmgp_mart",
             "threads": "{{ params.num_threads }}",
             "full_refresh": "{{ params.full_refresh }}",
             "args": "--fail-fast",

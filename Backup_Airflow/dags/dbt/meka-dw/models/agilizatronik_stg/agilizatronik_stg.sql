@@ -1,4 +1,4 @@
--- dbt/models/agilizatronik/agilizatronik.sql
+-- dbt/models/agilizatronik_stg/agilizatronik_stg.sql
 
 {{ config(
     materialized='table',
