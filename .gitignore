@@ -9,3 +9,10 @@ pgdata/
 openmetadata-1.11.5/docker-volume/
 Backup_Airflow/dags/__pycache__/
 Backup_Airflow/dags/dbt/meu_projeto/
+meuprojeto/
+meu_projeto/
+DBT_filtro
+DBT_filtro.py
+ingesting.py
+Run_Timestamp.py
+Teste_Gera_Doc.py

@@ -1,8 +1,0 @@
-{{ config(materialized='table') }}
-
-select
-    dt::timestamptz as data_hora,
-    description as tag_name,
-    "value" as tag_value
-from {{ source('variables', 'iba_data_raw') }}
-where description in ('EI113RC001\U', 'II113RC001\U', 'WQI13107_100\V') 
