@@ -60,9 +60,9 @@
 
             {% if col_type in ['character varying', 'varchar', 'text', 'character', 'char', 'bpchar', 'name', 'citext'] %}
                 {% if is_currency %}
-                    {% do select_parts.append("('R$ ' || COALESCE(\"" ~ col_name ~ "\", 'vazio')) AS \"" ~ col_name ~ "\"") %}
+                    {% do select_parts.append("('R$ ' || COALESCE(\"" ~ col_name ~ "\", '')) AS \"" ~ col_name ~ "\"") %}
                 {% else %}
-                    {% do select_parts.append('COALESCE("' ~ col_name ~ '", ' ~ "'vazio'" ~ ') AS "' ~ col_name ~ '"') %}
+                    {% do select_parts.append('COALESCE("' ~ col_name ~ '", ' ~ "''" ~ ') AS "' ~ col_name ~ '"') %}
                 {% endif %}
 
             {% elif col_type in ['integer', 'bigint', 'smallint', 'numeric', 'decimal', 'real', 'double precision', 'money'] %}

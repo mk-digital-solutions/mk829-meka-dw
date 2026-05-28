@@ -1,0 +1,268 @@
+version: 2
+
+# ==============================================================================
+# DOCUMENTAÇÃO DOS MODELOS — projeto meka-dw
+# ------------------------------------------------------------------------------
+# Camadas:
+#   stg  (bronze) -> leitura/normalização do raw
+#   int  (silver) -> regras de negócio / unificação
+#   mart (gold)   -> tabela final pronta para consumo (Metabase/Power BI/OM)
+#
+# IMPORTANTE (lineage): este arquivo gera DOCUMENTAÇÃO (descrições, colunas,
+# tags) no OpenMetadata. O LINEAGE (setas raw->stg->int->mart) só é gerado
+# quando os modelos usam ref()/source(). Hoje os modelos referenciam a tabela
+# física por string, então o manifest.json sai sem dependências. Ver as notas
+# no final / conversa para o refactor necessário.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# SOURCES (camada raw) — declarados para documentação e para uso futuro de
+# source() no refactor de lineage. A origem do agilizatronik é estática e
+# conhecida; as demais (cronogramas/flowup/mmgp) têm tabelas dinâmicas.
+# ------------------------------------------------------------------------------
+sources:
+  - name: raw_agilizatronik
+    description: "Dados brutos do Agilizatronik ingeridos via Airbyte (OData)."
+    schema: raw_agilizatronik
+    meta:
+      ingestion: "airbyte"
+    tables:
+      - name: fct_Meka_OData_Agilizatronik
+        description: "Tabela bruta (OData) de tickets do Agilizatronik."
+
+  - name: raw_cronogramas
+    description: >
+      Dados brutos dos cronogramas (uma tabela por cronograma e tipo:
+      mkXXX_00___BANCO, mkXXX_00___ATIVIDADES, mkXXX_00___ENTREGAS).
+      As tabelas são dinâmicas — novos cronogramas surgem ao longo do tempo.
+    schema: raw_cronogramas
+    meta:
+      ingestion: "airbyte"
+    # tables: (dinâmicas — não enumeradas; ver nota de lineage)
+
+  - name: raw_flowup
+    description: "Dados brutos do Flowup ingeridos via Airbyte (tabelas dinâmicas)."
+    schema: raw_flowup
+    meta:
+      ingestion: "airbyte"
+
+  - name: raw_mmgp
+    description: "Dados brutos do MMGP ingeridos via Airbyte (tabelas dinâmicas)."
+    schema: raw_mmgp
+    meta:
+      ingestion: "airbyte"
+
+# ==============================================================================
+# MODELOS
+# ==============================================================================
+models:
+
+  # ---------------------------------------------------------------------------
+  # CRONOGRAMAS — STAGING (schema físico: stg_cronogramas)
+  # Cada modelo unifica (UNION) N tabelas raw mkXXX_00___<TIPO> via
+  # dbt_utils.union_relations. As colunas de negócio são DINÂMICAS (variam
+  # conforme as tabelas de origem); abaixo só as colunas estruturais fixas.
+  # ---------------------------------------------------------------------------
+  - name: banco_stg
+    description: "Bronze: unificação das tabelas raw mkXXX_00___BANCO de todos os cronogramas."
+    meta: { layer: "bronze", schema: "stg_cronogramas", alias: "fct_banco", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["staging", "cronogramas", "banco"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX) extraído do nome da tabela de origem."
+      - name: tabela_origem
+        description: "Nome da tabela raw de onde a linha foi unificada (gerado por union_relations)."
+
+  - name: atividades_stg
+    description: "Bronze: unificação das tabelas raw mkXXX_00___ATIVIDADES de todos os cronogramas."
+    meta: { layer: "bronze", schema: "stg_cronogramas", alias: "fct_atividades", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["staging", "cronogramas", "atividades"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX) extraído do nome da tabela de origem."
+      - name: tabela_origem
+        description: "Nome da tabela raw de onde a linha foi unificada."
+
+  - name: entregas_stg
+    description: "Bronze: unificação das tabelas raw mkXXX_00___ENTREGAS de todos os cronogramas."
+    meta: { layer: "bronze", schema: "stg_cronogramas", alias: "fct_entregas", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["staging", "cronogramas", "entregas"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX) extraído do nome da tabela de origem."
+      - name: tabela_origem
+        description: "Nome da tabela raw de onde a linha foi unificada."
+
+  # ---------------------------------------------------------------------------
+  # CRONOGRAMAS — INTERMEDIATE (schema físico: int_cronogramas)
+  # ---------------------------------------------------------------------------
+  - name: banco_int
+    description: "Silver: cópia 1:1 do staging de banco (ponto de extensão para regras de negócio)."
+    meta: { layer: "silver", schema: "int_cronogramas", alias: "fct_banco", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["intermediario", "cronogramas", "banco"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX)."
+      - name: tabela_origem
+        description: "Tabela raw de origem (herdada do staging)."
+
+  - name: atividades_int
+    description: "Silver: cópia 1:1 do staging de atividades (ponto de extensão para regras de negócio)."
+    meta: { layer: "silver", schema: "int_cronogramas", alias: "fct_atividades", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["intermediario", "cronogramas", "atividades"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX)."
+      - name: tabela_origem
+        description: "Tabela raw de origem (herdada do staging)."
+
+  - name: entregas_int
+    description: >
+      Silver: unifica pares de colunas alternadas (uma com valor, outra null)
+      em uma única coluna final via COALESCE. As demais colunas são passadas
+      adiante (passthrough dinâmico).
+    meta: { layer: "silver", schema: "int_cronogramas", alias: "fct_entregas", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["intermediario", "cronogramas", "entregas"]
+    columns:
+      - name: "COMISSAO"
+        description: "Comissão consolidada (COALESCE de _COMISSAO_ / COMISSAO)."
+      - name: "FAT. PRODUTO"
+        description: "Faturamento de produto consolidado."
+      - name: "FAT. SERVICO"
+        description: "Faturamento de serviço consolidado."
+      - name: "FAT. PESSOAL PRD."
+        description: "Faturamento pessoal de produção consolidado."
+      - name: "FAT. PESSOAL SERV."
+        description: "Faturamento pessoal de serviço consolidado."
+
+  # ---------------------------------------------------------------------------
+  # CRONOGRAMAS — MART (schema físico: mart_cronogramas)
+  # COALESCE em todas as colunas: numérico -> 0, texto -> '' (vazio real).
+  # ---------------------------------------------------------------------------
+  - name: banco_mart
+    description: "Gold: banco final tratado (nulos numéricos -> 0, texto -> '')."
+    meta: { layer: "gold", schema: "mart_cronogramas", alias: "fct_banco", owner: "equipe_bi@mekatronik.com.br" }
+    tags: ["fato", "cronogramas", "banco"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX)."
+      - name: tabela_origem
+        description: "Tabela raw de origem."
+
+  - name: atividades_mart
+    description: "Gold: atividades final tratado (nulos numéricos -> 0, texto -> '')."
+    meta: { layer: "gold", schema: "mart_cronogramas", alias: "fct_atividades", owner: "equipe_bi@mekatronik.com.br" }
+    tags: ["fato", "cronogramas", "atividades"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX)."
+      - name: tabela_origem
+        description: "Tabela raw de origem."
+
+  - name: entregas_mart
+    description: "Gold: entregas final tratado (nulos numéricos -> 0, texto -> '')."
+    meta: { layer: "gold", schema: "mart_cronogramas", alias: "fct_entregas", owner: "equipe_bi@mekatronik.com.br" }
+    tags: ["fato", "cronogramas", "entregas"]
+    columns:
+      - name: codigo_cronograma
+        description: "Código do cronograma (mkXXX)."
+      - name: tabela_origem
+        description: "Tabela raw de origem."
+
+  # ---------------------------------------------------------------------------
+  # AGILIZATRONIK — STAGING (schema físico: stg_agilizatronik)
+  # Colunas conhecidas e fixas (limpeza de HTML, extração de JSON, etc.).
+  # ---------------------------------------------------------------------------
+  - name: agilizatronik_stg
+    description: "Bronze: limpeza dos tickets do Agilizatronik (remove HTML, extrai campos de JSON, normaliza status)."
+    meta: { layer: "bronze", schema: "stg_agilizatronik", alias: "fct_agilizatronik", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["staging", "agilizatronik"]
+    columns:
+      - name: ID_
+        description: "Identificador do ticket no Agilizatronik."
+      - name: Body
+        description: "Descrição do ticket com tags HTML removidas e espaços colapsados."
+      - name: Status
+        description: "Status do ticket sem o prefixo _N_ (ex.: COMPLETED)."
+      - name: Priority
+        description: "Prioridade do ticket sem o prefixo _N_."
+      - name: Followers
+        description: "Lista de FullName dos seguidores, separados por vírgula."
+      - name: Department
+        description: "Descrição do departamento (extraída do JSON)."
+      - name: Estimation
+        description: "Estimativa do ticket."
+      - name: TicketType
+        description: "Descrição do tipo de ticket (extraída do JSON)."
+      - name: CanBeClosed
+        description: "Indica se o ticket pode ser fechado."
+      - name: changedDate
+        description: "Data da última alteração."
+      - name: createdDate
+        description: "Data de criação."
+      - name: Accountables
+        description: "Lista de e-mails dos responsáveis, separados por vírgula."
+      - name: ExpectedDate
+        description: "Data esperada de conclusão."
+      - name: Satisfaction
+        description: "Nota de satisfação."
+      - name: BriefDescription
+        description: "Descrição resumida do ticket."
+      - name: RequesterDepartment
+        description: "Descrição do departamento solicitante (extraída do JSON)."
+      - name: IsConclusionNotified
+        description: "Indica se a conclusão foi notificada."
+
+  # ---------------------------------------------------------------------------
+  # AGILIZATRONIK — MART (schema físico: mart_agilizatronik)
+  # ---------------------------------------------------------------------------
+  - name: agilizatronik_mart
+    description: "Gold: tickets do Agilizatronik tratados (nulos numéricos -> 0, texto -> '')."
+    meta: { layer: "gold", schema: "mart_agilizatronik", alias: "fct_agilizatronik", owner: "equipe_bi@mekatronik.com.br" }
+    tags: ["fato", "agilizatronik"]
+    columns:
+      - name: ID_
+        description: "Identificador do ticket (nulo -> 0)."
+      - name: Body
+        description: "Descrição do ticket (nulo -> '')."
+      - name: Status
+        description: "Status do ticket (nulo -> '')."
+      - name: Satisfaction
+        description: "Nota de satisfação (nulo -> 0)."
+
+  # ---------------------------------------------------------------------------
+  # FLOWUP / MMGP — MART (schemas físicos: mart_flowup / mart_mmgp)
+  # ATENÇÃO: estes modelos NÃO são SELECTs normais. Eles criam as tabelas de
+  # destino dinamicamente (DROP/CREATE via run_query) e o próprio modelo
+  # materializa apenas uma TABELA DE LOG de execução. As tabelas de dados
+  # geradas dinamicamente NÃO são nós dbt e não aparecem no lineage do dbt.
+  # ---------------------------------------------------------------------------
+  - name: flowup_mart
+    description: >
+      Gold (operacional): recria todas as tabelas de raw_flowup em mart_flowup
+      aplicando COALESCE (numérico -> 0, texto -> ''). O modelo em si grava uma
+      tabela de log de execução.
+    meta: { layer: "gold", schema: "mart_flowup", alias: "flowup_log_execucao", owner: "equipe_bi@mekatronik.com.br" }
+    tags: ["mart", "flowup", "operacional"]
+    columns:
+      - name: execucao_at
+        description: "Timestamp de início da execução do modelo."
+      - name: schema_origem
+        description: "Schema de origem lido (raw_flowup)."
+      - name: schema_destino
+        description: "Schema de destino gerado (mart_flowup)."
+
+  - name: mmgp_mart
+    description: >
+      Gold (operacional): recria todas as tabelas de raw_mmgp em mart_mmgp
+      aplicando COALESCE (numérico -> 0, texto -> '') e prefixo 'R$ ' em
+      colunas de moeda. O modelo em si grava uma tabela de log de execução.
+    meta: { layer: "gold", schema: "mart_mmgp", alias: "mmgp_log_execucao", owner: "equipe_bi@mekatronik.com.br" }
+    tags: ["mart", "mmgp", "operacional"]
+    columns:
+      - name: execucao_at
+        description: "Timestamp de início da execução do modelo."
+      - name: schema_origem
+        description: "Schema de origem lido (raw_mmgp)."
+      - name: schema_destino
+        description: "Schema de destino gerado (mart_mmgp)."

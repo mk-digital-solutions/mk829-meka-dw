@@ -47,7 +47,7 @@
             {% set col_type = row[1] | lower %}
 
             {% if col_type in ['character varying', 'varchar', 'text', 'character', 'char', 'bpchar', 'name', 'citext'] %}
-                {% do select_parts.append('COALESCE("' ~ col_name ~ '", ' ~ "'vazio'" ~ ') AS "' ~ col_name ~ '"') %}
+                {% do select_parts.append('COALESCE("' ~ col_name ~ '", ' ~ "''" ~ ') AS "' ~ col_name ~ '"') %}
 
             {% elif col_type in ['integer', 'bigint', 'smallint', 'numeric', 'decimal', 'real', 'double precision', 'money'] %}
                 {% do select_parts.append('COALESCE("' ~ col_name ~ '", 0) AS "' ~ col_name ~ '"') %}
