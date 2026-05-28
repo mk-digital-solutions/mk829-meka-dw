@@ -27,7 +27,7 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 with DAG(
     dag_id="dbt_agilizatronik_mart",
     start_date=datetime(2024, 1, 1),
-    schedule="0 3 * * *",
+    schedule="15 1 * * *",
     catchup=False,
     tags=["dbt", "agilizatronik", "mart"],
     params={

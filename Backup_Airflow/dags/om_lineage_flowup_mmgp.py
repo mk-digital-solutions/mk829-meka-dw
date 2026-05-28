@@ -150,7 +150,7 @@ def criar_lineage(**context):
 with DAG(
     dag_id="om_lineage_flowup_mmgp",
     start_date=datetime(2024, 1, 1),
-    schedule=None,  # rodar sob demanda (idealmente após dbt_flowup_mart / dbt_mmgp_mart)
+    schedule="30 3 * * *",
     catchup=False,
     tags=["openmetadata", "lineage", "flowup", "mmgp"],
     params={

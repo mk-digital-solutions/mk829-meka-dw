@@ -91,7 +91,7 @@ def gerar_config_yaml(**context):
 with DAG(
     dag_id="ingest_postgres_metadata",
     start_date=datetime(2024, 1, 1),
-    schedule=None,
+    schedule="30 2 * * *",
     catchup=False,
     tags=["openmetadata", "postgres", "metadata-ingestion"],
 ) as dag:

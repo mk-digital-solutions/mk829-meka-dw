@@ -27,7 +27,7 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 with DAG(
     dag_id="dbt_cronogramas_int",
     start_date=datetime(2024, 1, 1),
-    schedule="0 3 * * *",
+    schedule="30 0 * * *",
     catchup=False,
     tags=["dbt", "cronogramas", "int"],
     params={

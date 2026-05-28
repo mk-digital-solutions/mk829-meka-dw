@@ -66,7 +66,7 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 with DAG(
     dag_id="gera_docs_dbt",
     start_date=datetime(2024, 1, 1),
-    schedule=None,
+    schedule="0 2 * * *",
     catchup=False,
     tags=["dbt", "cosmos", "docs"],
 ) as dag:

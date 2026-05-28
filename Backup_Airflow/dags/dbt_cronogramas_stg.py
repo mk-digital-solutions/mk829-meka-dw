@@ -48,7 +48,7 @@ def buscar_cronogramas_stg(**context):
 with DAG(
     dag_id="dbt_cronogramas_stg",
     start_date=datetime(2024, 1, 1),
-    schedule="0 3 * * *",
+    schedule="0 0 * * *",
     catchup=False,
     tags=["dbt", "cronogramas", "stg"],
     # ✅ CORREÇÃO: faz o Jinja devolver o tipo nativo (lista) em vez de string

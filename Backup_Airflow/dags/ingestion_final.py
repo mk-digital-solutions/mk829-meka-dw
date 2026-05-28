@@ -33,7 +33,7 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 with DAG(
     dag_id="ingestion_final_v6_clean",  # Atualizado para v6
     start_date=datetime(2024, 1, 1),
-    schedule=None,
+    schedule="0 3 * * *",
     catchup=False,
     tags=["dbt", "cosmos", "openmetadata", "prod"],
 ) as dag:
