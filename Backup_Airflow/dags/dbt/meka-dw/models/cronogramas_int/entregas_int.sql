@@ -6,8 +6,6 @@
     alias='fct_entregas'
 ) }}
 
-{% set stg_schema = var('stg_schema', 'stg_cronogramas') %}
-{% set source_table = 'fct_entregas' %}
 {% set debug = var('modo_debug', False) %}
 
 {# Pares (col_a, col_b) que se alternam (uma com valor, outra null) e o alias final #}
@@ -25,11 +23,7 @@
     {% do excluded.append(m['b']) %}
 {% endfor %}
 
-{% set source_rel = adapter.get_relation(
-    database=target.database,
-    schema=stg_schema,
-    identifier=source_table
-) %}
+{% set source_rel = ref('entregas_stg') %}
 
 {% if source_rel %}
     {% set columns = adapter.get_columns_in_relation(source_rel) %}
@@ -55,5 +49,5 @@ SELECT
 {% else %}
     NULL AS placeholder
 {% endif %}
-FROM {{ stg_schema }}."{{ source_table }}"
+FROM {{ ref('entregas_stg') }}
 {% if columns | length == 0 %}LIMIT 0{% endif %}

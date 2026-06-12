@@ -6,8 +6,9 @@
     alias='fct_banco'
 ) }}
 
-{% set stg_schema = var('stg_schema', 'stg_cronogramas') %}
 {% set debug = var('modo_debug', False) %}
 
+-- 'Valor_entregue__Cliente_' já vem como NUMERIC da camada staging (banco_stg),
+-- portanto não é mais necessário limpar o formato BR aqui. Repasse direto.
 SELECT *
-FROM {{ stg_schema }}."fct_banco"
+FROM {{ ref('banco_stg') }}

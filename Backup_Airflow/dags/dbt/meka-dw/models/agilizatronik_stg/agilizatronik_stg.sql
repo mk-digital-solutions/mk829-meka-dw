@@ -6,7 +6,6 @@
     alias='fct_agilizatronik'
 ) }}
 
-{% set raw_schema = var('raw_schema', 'raw_agilizatronik') %}
 {% set debug = var('modo_debug', False) %}
 
 SELECT
@@ -64,4 +63,4 @@ SELECT
 
     "IsConclusionNotified"
 
-FROM {{ raw_schema }}."fct_Meka_OData_Agilizatronik"
+FROM {{ source('raw_agilizatronik', 'fct_Meka_OData_Agilizatronik') }}

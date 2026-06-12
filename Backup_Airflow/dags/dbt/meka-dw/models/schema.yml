@@ -52,6 +52,15 @@ sources:
     meta:
       ingestion: "airbyte"
 
+  - name: public
+    description: >
+      Schema public do Postgres — origem das planilhas carregadas no banco.
+      As tabelas são dinâmicas (uma por planilha) e copiadas 1:1 para
+      raw_planilhas pelo modelo planilhas_raw.
+    schema: public
+    meta:
+      ingestion: "planilhas"
+
 # ==============================================================================
 # MODELOS
 # ==============================================================================
@@ -266,3 +275,79 @@ models:
         description: "Schema de origem lido (raw_mmgp)."
       - name: schema_destino
         description: "Schema de destino gerado (mart_mmgp)."
+
+  # ---------------------------------------------------------------------------
+  # PLANILHAS — RAW (schema físico: raw_planilhas)
+  # ATENÇÃO: igual a flowup/mmgp, este modelo NÃO é um SELECT normal. Ele recria
+  # dinamicamente (DROP/CREATE via run_query) todas as tabelas do schema public
+  # dentro de raw_planilhas, fazendo uma cópia 1:1 (SELECT *), SEM transformar
+  # nada. O próprio modelo materializa apenas uma TABELA DE LOG de execução.
+  # As tabelas copiadas NÃO são nós dbt e não aparecem no lineage do dbt.
+  # ---------------------------------------------------------------------------
+  - name: planilhas_raw
+    description: >
+      Raw: copia 1:1 todas as tabelas do schema public para raw_planilhas, sem
+      nenhuma transformação. O modelo em si grava uma tabela de log de execução.
+    meta: { layer: "raw", schema: "raw_planilhas", alias: "planilhas_log_execucao", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["raw", "planilhas", "operacional"]
+    columns:
+      - name: execucao_at
+        description: "Timestamp de início da execução do modelo."
+      - name: schema_origem
+        description: "Schema de origem lido (public)."
+      - name: schema_destino
+        description: "Schema de destino gerado (raw_planilhas)."
+
+  # ---------------------------------------------------------------------------
+  # PLANILHAS — STAGING (schema físico: stg_planilhas)
+  # ATENÇÃO: igual a flowup/mmgp/planilhas_raw, este modelo NÃO é um SELECT
+  # normal. Ele recria dinamicamente (DROP/CREATE via run_query) todas as
+  # tabelas de raw_planilhas em stg_planilhas. As demais tabelas são cópia 1:1
+  # (SELECT *); apenas a tabela COMPOSICAO_PROJETOS é transformada: as colunas
+  # de valor (Valor_Pedido_Servicos, Valor_Pedido_Produto, Valor_Materiais_Prev_)
+  # são convertidas de varchar para numeric, limpando o formato monetário BR
+  # ("R$ 1.234,56" -> 1234.56; vazio -> NULL). O próprio modelo materializa
+  # apenas uma TABELA DE LOG.
+  # As tabelas geradas NÃO são nós dbt e não aparecem no lineage do dbt.
+  # ---------------------------------------------------------------------------
+  - name: planilhas_stg
+    description: >
+      Bronze: recria todas as tabelas de raw_planilhas em stg_planilhas (cópia
+      1:1 via SELECT *), exceto COMPOSICAO_PROJETOS, cujas colunas de valor
+      (Valor_Pedido_Servicos, Valor_Pedido_Produto, Valor_Materiais_Prev_) são
+      convertidas de varchar para numeric (limpando o formato monetário BR). O
+      modelo em si grava uma tabela de log de execução.
+    meta: { layer: "bronze", schema: "stg_planilhas", alias: "planilhas_log_execucao", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["staging", "planilhas", "operacional"]
+    columns:
+      - name: execucao_at
+        description: "Timestamp de início da execução do modelo."
+      - name: schema_origem
+        description: "Schema de origem lido (raw_planilhas)."
+      - name: schema_destino
+        description: "Schema de destino gerado (stg_planilhas)."
+
+  # ---------------------------------------------------------------------------
+  # PLANILHAS — MART (schema físico: mart_planilhas)
+  # ATENÇÃO: igual a flowup/mmgp/planilhas_raw, este modelo NÃO é um SELECT
+  # normal. Ele recria dinamicamente (DROP/CREATE via run_query) todas as
+  # tabelas de stg_planilhas em mart_planilhas, preenchendo os null (texto -> '',
+  # numérico/int -> 0) e mantendo os tipos originais. O próprio modelo
+  # materializa apenas uma TABELA DE LOG.
+  # As tabelas geradas NÃO são nós dbt e não aparecem no lineage do dbt.
+  # ---------------------------------------------------------------------------
+  - name: planilhas_mart
+    description: >
+      Gold (operacional): recria todas as tabelas de stg_planilhas em
+      mart_planilhas preenchendo os null (texto -> '', numérico/int -> 0) e
+      mantendo os tipos originais. O modelo em si grava uma tabela de log de
+      execução.
+    meta: { layer: "gold", schema: "mart_planilhas", alias: "planilhas_log_execucao", owner: "equipe_bi@mekatronik.com.br" }
+    tags: ["mart", "planilhas", "operacional"]
+    columns:
+      - name: execucao_at
+        description: "Timestamp de início da execução do modelo."
+      - name: schema_origem
+        description: "Schema de origem lido (stg_planilhas)."
+      - name: schema_destino
+        description: "Schema de destino gerado (mart_planilhas)."
