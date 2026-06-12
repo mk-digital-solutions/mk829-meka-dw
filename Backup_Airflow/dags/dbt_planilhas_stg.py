@@ -25,11 +25,11 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 
 
 with DAG(
-    dag_id="dbt_planilhas_mart",
+    dag_id="dbt_planilhas_stg",
     start_date=datetime(2024, 1, 1),
-    schedule="30 1 * * *",
+    schedule="15 1 * * *",
     catchup=False,
-    tags=["dbt", "planilhas", "mart"],
+    tags=["dbt", "planilhas", "stg"],
     params={
         "modo_debug": Param(False, type="boolean", description="Ativar modo debug? (Limita registros)"),
         "full_refresh": Param(False, type="boolean", description="Forçar full refresh das tabelas?"),
@@ -41,20 +41,21 @@ with DAG(
         dbt_project_path=DBT_PROJECT_PATH,
     )
 
-    render_config = RenderConfig(select=["planilhas_mart"])
+    render_config = RenderConfig(select=["planilhas_stg"])
 
     transformacao = DbtTaskGroup(
-        group_id="dbt_run_planilhas_mart",
+        group_id="dbt_run_planilhas_stg",
         project_config=project_config,
         profile_config=profile_config,
         execution_config=execution_config,
         render_config=render_config,
         operator_args={
             "vars": {
-                "raw_schema": "stg_planilhas",
+                "raw_schema": "raw_planilhas",
+                "target_schema": "stg_planilhas",
                 "modo_debug": "{{ params.modo_debug }}",
             },
-            "select": "planilhas_mart",
+            "select": "planilhas_stg",
             "threads": "{{ params.num_threads }}",
             "full_refresh": "{{ params.full_refresh }}",
             "args": "--fail-fast",
