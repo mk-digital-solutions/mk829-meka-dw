@@ -41,7 +41,7 @@ with DAG(
         dbt_project_path=DBT_PROJECT_PATH,
     )
 
-    render_config = RenderConfig(select=["planilhas_raw"])
+    render_config = RenderConfig(select=["planilhas_raw"], dbt_deps=False)
 
     transformacao = DbtTaskGroup(
         group_id="dbt_run_planilhas_raw",
@@ -50,6 +50,7 @@ with DAG(
         execution_config=execution_config,
         render_config=render_config,
         operator_args={
+            "install_deps": False,  # casa com dbt_deps=False do RenderConfig (ambiente offline)
             "vars": {
                 "raw_schema": "public",
                 "target_schema": "raw_planilhas",

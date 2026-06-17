@@ -43,7 +43,7 @@ def _load_om_config(path):
     with open(path) as f:
         cfg = yaml.safe_load(f)
     server = cfg["workflowConfig"]["openMetadataServerConfig"]
-    host = server["hostPort"].rstrip("/")  # ex.: http://192.168.0.156:8585/api
+    host = server["hostPort"].rstrip("/")  # ex.: http://192.168.0.157:8585/api
     token = server["securityConfig"]["jwtToken"]
     return host, token
 

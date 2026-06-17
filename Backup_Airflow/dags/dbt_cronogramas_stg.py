@@ -70,7 +70,7 @@ with DAG(
     )
 
     # ✅ Renderiza APENAS os 3 modelos staging como tasks (não o projeto inteiro)
-    render_config = RenderConfig(select=["atividades_stg", "banco_stg", "entregas_stg"])
+    render_config = RenderConfig(select=["atividades_stg", "banco_stg", "entregas_stg"], dbt_deps=False)
 
     transformacao = DbtTaskGroup(
         group_id="dbt_run_cronogramas_stg",
@@ -79,6 +79,7 @@ with DAG(
         execution_config=execution_config,
         render_config=render_config,
         operator_args={
+            "install_deps": False,  # casa com dbt_deps=False do RenderConfig (ambiente offline)
             "vars": {
                 "raw_schema": "raw_cronogramas",
                 # ✅ Com render_template_as_native_obj=True, isso volta como lista real

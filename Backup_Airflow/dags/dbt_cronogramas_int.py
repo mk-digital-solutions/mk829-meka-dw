@@ -41,7 +41,7 @@ with DAG(
         dbt_project_path=DBT_PROJECT_PATH,
     )
 
-    render_config = RenderConfig(select=["atividades_int", "banco_int", "entregas_int"])
+    render_config = RenderConfig(select=["atividades_int", "banco_int", "entregas_int"], dbt_deps=False)
 
     transformacao = DbtTaskGroup(
         group_id="dbt_run_cronogramas_int",
@@ -50,6 +50,7 @@ with DAG(
         execution_config=execution_config,
         render_config=render_config,
         operator_args={
+            "install_deps": False,  # casa com dbt_deps=False do RenderConfig (ambiente offline)
             "vars": {
                 "stg_schema": "stg_cronogramas",
                 "modo_debug": "{{ params.modo_debug }}",
