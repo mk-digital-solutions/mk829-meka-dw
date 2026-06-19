@@ -130,7 +130,7 @@
                     <li><strong>Sistema Operacional (Host):</strong> Windows Server 2025</li>
                     <li><strong>Virtualização:</strong> Hyper-V</li>
                     <li><strong>Máquina Virtual:</strong> Linux (Debian)</li>
-                    <li><strong>IP da VM:</strong> 192.168.0.156</li>
+                    <li><strong>IP da VM:</strong> 192.168.0.157</li>
                 </ul>
                 <h3>Componentes</h3>
                 <ul>
@@ -434,6 +434,39 @@
                         </ol>
                     </div>
                 </details>
+            </div>
+        </details>
+
+        <!-- ===================== ORQUESTRAÇÃO E DOCUMENTAÇÃO ===================== -->
+        <details>
+            <summary>⚙️ Orquestração (Airflow + dbt) e Catálogo (OpenMetadata)</summary>
+            <div class="step">
+                <h3>Pipeline dbt — Planilhas</h3>
+                <p>Transformação em 3 camadas no Postgres (modelos dinâmicos, padrão flowup/mmgp):</p>
+                <table>
+                    <tr><th>DAG</th><th>Origem → Destino</th><th>O que faz</th></tr>
+                    <tr><td><code>dbt_planilhas_raw</code></td><td><code>public</code> → <code>raw_planilhas</code></td><td>Cópia 1:1, sem transformação</td></tr>
+                    <tr><td><code>dbt_planilhas_stg</code></td><td><code>raw_planilhas</code> → <code>stg_planilhas</code></td><td>Camada de staging</td></tr>
+                    <tr><td><code>dbt_planilhas_mart</code></td><td><code>stg_planilhas</code> → <code>mart_planilhas</code></td><td>Trata nulos (texto → <code>''</code>, número → <code>0</code>)</td></tr>
+                </table>
+
+                <h3>Documentação no OpenMetadata</h3>
+                <p>DAGs <code>om_docs_*</code> (uma por mart: flowup, cronogramas, agilizatronik, planilhas) escrevem
+                metadados via API REST do OM. Idempotentes, agendadas semanalmente (segunda). Aplicam por tabela:</p>
+                <ul>
+                    <li>Descrição da <strong>tabela</strong> e das <strong>colunas</strong> (exceto técnicas <code>_airbyte_*</code>)</li>
+                    <li><strong>Owner</strong>: <span class="tag green">MKADMIN</span> &nbsp; <strong>Domínio</strong>: <span class="tag teal">Meka DW</span></li>
+                    <li><strong>Tier</strong>: Tier1 para tabelas-chave (ex.: <code>fct_reportagem</code>, <code>fct_agilizatronik</code>, <code>COMPOSICAO_PROJETOS</code>, <code>HH_COMPOSICOES</code>); demais Tier2</li>
+                    <li><strong>Nº de linhas</strong>, <strong>tamanho</strong> e <strong>data de criação</strong> (profile)</li>
+                </ul>
+                <div class="tip">
+                    Pré-requisito: tabelas catalogadas pela DAG <code>ingest_postgres_metadata</code> antes de rodar as <code>om_docs_*</code>.
+                </div>
+                <div class="warning">
+                    Ambiente Airflow é offline (sem DNS externo): containers usam <code>dns: [8.8.8.8, 1.1.1.1]</code> no compose, e as DAGs
+                    dbt rodam com <code>dbt_deps=False</code> + <code>install_deps=False</code> (pacotes vendados em <code>dbt_packages/</code>).
+                </div>
+                <p>Detalhes completos em <code>documentacao_airflow_dbt_om.md</code>.</p>
             </div>
         </details>
 

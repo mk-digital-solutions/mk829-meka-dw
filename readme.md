@@ -13,7 +13,7 @@ O projeto está sendo executado com a seguinte infraestrutura:
 - **Sistema Operacional (Host):** Windows Server 2025  
 - **Virtualização:** Hyper-V  
 - **Máquina Virtual:** Linux (Debian)  
-- **IP da VM:** 192.168.0.156  
+- **IP da VM:** 192.168.0.157  
 
 ---
 
@@ -63,6 +63,23 @@ Essencial para execução de requisições HTTP, via protocolo REST, onde é pos
 
 
 ---
+
+### 🌀 `Airflow`
+Plataforma de **orquestração** dos pipelines de dados. Permite:
+
+- Executar e agendar **DAGs** que transformam os dados (modelos **dbt** via Cosmos)
+- Monitorar execuções e logs e reprocessar tarefas com falha
+
+---
+
+### 🧭 `OpenMetadata`
+Plataforma de **catálogo e governança** de dados. Permite:
+
+- Catalogar schemas, tabelas e colunas do **PostgreSQL**
+- Documentar descrições e definir **owner**, **tier** e **domínio**
+- Consultar linhagem (lineage), nº de linhas, tamanho e data das tabelas
+
+---
 ## 🔄 Fluxo de Dados
 
 1. Extração de dados a partir de planilhas no **Google Sheets**
@@ -90,6 +107,4 @@ Para um guia passo a passo interativo sobre configuração, padrões de nomencla
 
 ## 🚀 Próximos Passos
 
-- Modelagem do Data Warehouse
-- Implementação de transformações
 - Integração com ferramentas de visualização (Power BI)
