@@ -62,6 +62,9 @@ DESCRICOES = {
         "tarefa/quadro/projeto num dia, com horário de início e fim, detalhes, status do "
         "apontamento, crédito de horas, marcações de sábado e domingo/feriado e adicional "
         "noturno (valor e percentual).",
+    "fct_membro":
+        "Cadastro de membros (colaboradores) do Flowup: identificador, nome, e-mail e "
+        "data de desativação (quando o membro deixou de estar ativo).",
     "fct_cashflowitems":
         "Lançamentos do fluxo de caixa do Flowup (contas a pagar e a receber). Cada "
         "linha é um item financeiro com valor, data, vencimento (DueDate), tipo "
@@ -125,6 +128,12 @@ COLUNAS = {
         "AdicionalNoturno": "Valor do adicional noturno do apontamento.",
         "HorasTrabalhadas": "Quantidade de horas trabalhadas no dia.",
         "PercentualNoturno": "Percentual de adicional noturno aplicado.",
+    },
+    "fct_membro": {
+        "Id": "Identificador único do membro (colaborador).",
+        "Nome": "Nome do membro.",
+        "Email": "E-mail do membro.",
+        "DataDesativacao": "Data de desativação do membro (quando aplicável).",
     },
     "fct_cashflowitems": {
         "Id": "Identificador único do lançamento financeiro.",
