@@ -299,6 +299,37 @@ models:
         description: "Schema de destino gerado (raw_planilhas)."
 
   # ---------------------------------------------------------------------------
+  # PLANILHAS — RAW: BANCO_BI + colaborador (schema físico: raw_planilhas)
+  # Roda na DAG dbt_planilhas_raw depois de planilhas_raw e da task
+  # mapear_sincronizacoes_banco_bi (sync_id -> conexão do Airbyte). Como fica em
+  # raw_planilhas, é copiado para stg_planilhas e mart_planilhas pelos modelos
+  # planilhas_stg/planilhas_mart, igual às demais tabelas.
+  # ---------------------------------------------------------------------------
+  - name: fct_banco_bi_colaboradores
+    description: >
+      BANCO_BI com o nome de quem está alocado em cada entrega (NOME_B1 de
+      BANCO_COLABORADORES). BANCO_BI é gravada por uma conexão do Airbyte por
+      planilha (google_sheets_<pessoa>); a linha é ligada à conexão pelo sync_id
+      de _airbyte_meta e a conexão ao dono da planilha pelo nome (ou vínculo
+      manual no modelo). Planilhas de gestor trazem entregas dos liderados, por
+      isso o nome citado no texto da entrega tem prioridade sobre o dono da
+      planilha. Demais colunas são as de BANCO_BI, sem transformação.
+    meta: { layer: "raw", schema: "raw_planilhas", alias: "fct_banco_bi_colaboradores", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["raw", "planilhas", "banco_bi"]
+    columns:
+      - name: NOME_B1
+        description: >
+          Pessoa alocada na entrega: colaborador do cadastro citado na entrega;
+          senão o nome escrito na entrega (padrão "MÊS/AAAA - Nome"); senão o
+          dono da planilha. Ver origem_nome.
+      - name: nome_dono_planilha
+        description: "Colaborador dono da planilha de origem (em planilhas de gestor, o gestor)."
+      - name: conexao_airbyte
+        description: "Conexão do Airbyte que gravou a linha (ex.: google_sheets_hugo_leite)."
+      - name: origem_nome
+        description: "De onde veio NOME_B1: entrega, entrega_fora_cadastro, dono_planilha ou sem_vinculo."
+
+  # ---------------------------------------------------------------------------
   # PLANILHAS — STAGING (schema físico: stg_planilhas)
   # ATENÇÃO: igual a flowup/mmgp/planilhas_raw, este modelo NÃO é um SELECT
   # normal. Ele recria dinamicamente (DROP/CREATE via run_query) todas as
@@ -313,7 +344,8 @@ models:
   - name: planilhas_stg
     description: >
       Bronze: recria todas as tabelas de raw_planilhas em stg_planilhas (cópia
-      1:1 via SELECT *), exceto COMPOSICAO_PROJETOS, cujas colunas de valor
+      1:1 via SELECT *), EXCETO as tabelas <pessoa>_BANCO_BI (que são unificadas
+      pelo modelo fct_banco_bi) e COMPOSICAO_PROJETOS, cujas colunas de valor
       (Valor_Pedido_Servicos, Valor_Pedido_Produto, Valor_Materiais_Prev_) são
       convertidas de varchar para numeric (limpando o formato monetário BR). O
       modelo em si grava uma tabela de log de execução.
@@ -326,6 +358,43 @@ models:
         description: "Schema de origem lido (raw_planilhas)."
       - name: schema_destino
         description: "Schema de destino gerado (stg_planilhas)."
+
+  # ---------------------------------------------------------------------------
+  # PLANILHAS — STAGING: BANCO_BI unificado (schema físico: stg_planilhas)
+  # Roda na DAG dbt_planilhas_stg, junto com planilhas_stg. Mesmo desenho dos
+  # cronogramas (union_relations + conversão de tipos). As tabelas de origem
+  # <pessoa>_BANCO_BI NÃO são copiadas uma a uma para stg_planilhas.
+  # ---------------------------------------------------------------------------
+  - name: fct_banco_bi
+    description: >
+      Bronze: unificação das tabelas <pessoa>_BANCO_BI de raw_planilhas (uma
+      planilha de BI por colaborador, gravada pelo Airbyte com prefixo por
+      conexão) numa única tabela, com os tipos das colunas de negócio
+      convertidos (varchar -> numeric/date) conforme os dados. A entrega perde
+      o prefixo (que vira CENTRO_DE_CUSTO) para casar com fct_entregas, de onde
+      vem a DATA_DE_CONCLUSAO.
+    meta: { layer: "bronze", schema: "stg_planilhas", alias: "fct_banco_bi", owner: "equipe_dados@mekatronik.com.br" }
+    tags: ["staging", "planilhas", "banco_bi"]
+    columns:
+      - name: colaborador_planilha
+        description: "Colaborador dono da planilha, extraído do nome da tabela de origem (ex.: wollace_dantas)."
+      - name: tabela_origem
+        description: "Tabela raw de onde a linha foi unificada (gerado por union_relations)."
+      - name: CENTRO_DE_CUSTO
+        description: >
+          Centro de custo da entrega (ex.: MK829), retirado do início da entrega,
+          no mesmo formato de fct_entregas.CENTRO_DE_CUSTO. Junto com a entrega,
+          forma a chave para fct_entregas (CENTRO_DE_CUSTO, ENTREGA) — o texto da
+          entrega sozinho se repete entre projetos. Não é o código do cronograma.
+      - name: _Entrega_
+        description: >
+          Entrega sem o prefixo do projeto ("MK830 ENTREGA 4 - ..." ->
+          "ENTREGA 4 - ..."), no mesmo formato de fct_entregas.ENTREGA.
+      - name: DATA_DE_CONCLUSAO
+        description: >
+          Data de conclusão da entrega em fct_entregas (mart_cronogramas), pela
+          chave (CENTRO_DE_CUSTO, ENTREGA), como date (ano completo). Nula quando
+          a entrega não existe em fct_entregas.
 
   # ---------------------------------------------------------------------------
   # PLANILHAS — MART (schema físico: mart_planilhas)
