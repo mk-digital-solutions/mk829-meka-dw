@@ -41,7 +41,11 @@ with DAG(
         dbt_project_path=DBT_PROJECT_PATH,
     )
 
-    render_config = RenderConfig(select=["planilhas_stg"], dbt_deps=False)
+    # A pasta models/planilhas_stg/ tem dois modelos: planilhas_stg (cópia das
+    # tabelas de raw_planilhas) e fct_banco_bi (união das <pessoa>_BANCO_BI).
+    SELECT_PLANILHAS_STG = "path:models/planilhas_stg"
+
+    render_config = RenderConfig(select=[SELECT_PLANILHAS_STG], dbt_deps=False)
 
     transformacao = DbtTaskGroup(
         group_id="dbt_run_planilhas_stg",
@@ -56,7 +60,7 @@ with DAG(
                 "target_schema": "stg_planilhas",
                 "modo_debug": "{{ params.modo_debug }}",
             },
-            "select": "planilhas_stg",
+            "select": SELECT_PLANILHAS_STG,
             "threads": "{{ params.num_threads }}",
             "full_refresh": "{{ params.full_refresh }}",
             "args": "--fail-fast",

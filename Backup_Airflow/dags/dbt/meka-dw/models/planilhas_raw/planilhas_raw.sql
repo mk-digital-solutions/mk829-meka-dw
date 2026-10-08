@@ -16,12 +16,15 @@
 {% if execute %}
     {% do run_query("CREATE SCHEMA IF NOT EXISTS " ~ target_schema_full) %}
 
-    {# 2. Lista todas as tabelas presentes no schema de origem (public) #}
+    {# 2. Lista todas as tabelas presentes no schema de origem (public).
+          Ignora as tabelas temporárias do Airbyte (public<stream><hash md5>):
+          elas existem só durante um sync e podem sumir no meio da cópia. #}
     {% set tabelas_query %}
         SELECT table_name
         FROM information_schema.tables
         WHERE table_schema = '{{ raw_schema }}'
           AND table_type = 'BASE TABLE'
+          AND table_name !~ '^public.*[0-9a-f]{32}$'
         ORDER BY table_name
     {% endset %}
 

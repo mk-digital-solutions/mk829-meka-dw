@@ -24,6 +24,9 @@
         WHERE table_schema = '{{ raw_schema }}'
           AND table_type = 'BASE TABLE'
           AND table_name <> 'planilhas_log_execucao'
+          {# As tabelas <pessoa>_BANCO_BI não são copiadas uma a uma: elas são
+             unificadas em stg_planilhas.fct_banco_bi pelo modelo fct_banco_bi. #}
+          AND table_name NOT LIKE '%\_BANCO\_BI'
         ORDER BY table_name
     {% endset %}
 
