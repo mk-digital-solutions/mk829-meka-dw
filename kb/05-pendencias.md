@@ -174,7 +174,8 @@ Há ainda convites de agenda para Entrega 1 a 4 e para "Produto de dados 02" e
 lote de 2026-04 a 2026-08). E um convite do Wollace Dantas ao Hugo e à Vanessa
 Barbalho para **"Validação - Produto de dados 06 - MK829"**, quinta, **08/10/2026,
 14h às 15h** (e-mail, thread 1878333610353397433, 06/10/2026): há validação de
-entrega marcada depois do "encerrado em set/26" do índice global.
+entrega marcada depois do "encerrado em set/26" do índice global. Em 09/10 o Wollace
+remarcou para **quarta, 14/10/2026, 15h às 16h** (e-mail, thread 1878571786581832325).
 
 **Não resolvido aqui.** As atas são geradas automaticamente e registram decisão e
 intenção, não artefato: nenhuma diz que o dashboard de faturamento foi entregue.
