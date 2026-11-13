@@ -20,8 +20,10 @@ hora).
 Rodam em produção sem estar versionados: `pipeline_transformacao.py`, `sheets_planilha_gestao.py`,
 `dbt_atividades.py`, `macros/` inteira (incluindo `conversao_tipos.sql`), `dbt_project.yml`, `packages.yml`,
 `fct_banco_bi_colaboradores.sql`, `manutencao/`, `handover (1).md`. E `DBT_filtro.py` (a DAG oficial
-`dbt_entregas`) está **no `.gitignore`**. Além disso, 43 arquivos versionados estão modificados sem commit
-na `main` (DAGs, modelos, Dockerfile, airflow.cfg, deploy.yml). Um disco perdido leva junto o pipeline.
+`dbt_entregas`) está **no `.gitignore`**. Os arquivos versionados que estavam modificados foram commitados
+em 13/11/2026 (`152c902`, `dev-wollace`), mas `planilhas_stg.sql` já chama `conv__lista_select(...,
+dividir_cem=...)`, que só existe na `macros/` não versionada: um clone limpo não compila. Um disco perdido
+leva junto o pipeline.
 Pelo Padrão da Casa ("uma branch encalhada produz conclusões erradas sobre o estado do projeto"), isso é a
 pendência mais cara do repositório.
 
