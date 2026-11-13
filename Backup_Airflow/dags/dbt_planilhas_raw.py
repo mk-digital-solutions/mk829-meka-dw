@@ -109,7 +109,7 @@ def mapear_sincronizacoes_banco_bi(**context):
 with DAG(
     dag_id="dbt_planilhas_raw",
     start_date=datetime(2024, 1, 1),
-    schedule="0 1 * * *",
+    schedule=None,  # disparada pela DAG pipeline_transformacao (de hora em hora)
     catchup=False,
     tags=["dbt", "planilhas", "raw"],
     params={

@@ -4,7 +4,7 @@ Documentação/enriquecimento do mart_planilhas -> OpenMetadata (via REST API).
 Mesma abordagem da om_docs_flowup_mart (descrição de tabela e colunas, owner, tier e
 rowCount dinâmico via API). Idempotente; roda semanalmente ou sob demanda.
 
-Tier: COMPOSICAO_PROJETOS e HH_COMPOSICOES = Tier1; demais = Tier2.
+Tier: fct_banco_bi, COMPOSICAO_PROJETOS e HH_COMPOSICOES = Tier1; demais = Tier2.
 A tabela de log 'planilhas_log_execucao' é ignorada (não é dado de BI).
 
 COMPOSICAO_PROJETOS tem ~180 colunas (uma por cargo/HH/comissão/valor). Em vez de um
@@ -43,9 +43,22 @@ DOMAIN_DISPLAY = "Meka DW"
 AIRBYTE_COLS = {"_airbyte_raw_id", "_airbyte_extracted_at", "_airbyte_meta", "_airbyte_generation_id"}
 
 TIER_DEFAULT = "Tier.Tier2"
-TIER_OVERRIDES = {"COMPOSICAO_PROJETOS": "Tier.Tier1", "HH_COMPOSICOES": "Tier.Tier1"}
+TIER_OVERRIDES = {"COMPOSICAO_PROJETOS": "Tier.Tier1", "HH_COMPOSICOES": "Tier.Tier1",
+                  "fct_banco_bi": "Tier.Tier1"}
 
 DESCRICOES = {
+    "fct_banco_bi":
+        "Visao financeira/BI por entrega, unificando as planilhas de BI de todos os "
+        "colaboradores (uma tabela <pessoa>_BANCO_BI por conexao do Airbyte no schema "
+        "public, unidas pelo modelo dbt fct_banco_bi na DAG dbt_planilhas_stg). Cada "
+        "linha e um lancamento de uma planilha: entrega ou faturamento, com comissoes e "
+        "faturamentos por tipo (produto, servico, pessoal, assistencia e centro de custo). "
+        "A entrega vem sem o prefixo do projeto, no mesmo formato de "
+        "mart_cronogramas.fct_entregas.ENTREGA; o prefixo virou a coluna CENTRO_DE_CUSTO. "
+        "A chave para fct_entregas e (CENTRO_DE_CUSTO, _Entrega_) - o texto da entrega "
+        "sozinho se repete entre projetos. DATA_DE_CONCLUSAO vem dessa juncao e traz o ano "
+        "completo, que a coluna DATA (DD/MM) nao tem. Substitui a tabela BANCO_BI, que era "
+        "gravada por todas as conexoes no mesmo destino e perdia dados.",
     "BANCO_BI":
         "Planilha BANCO_BI: visão financeira/BI por data (entrega, proposta, comissões e "
         "faturamentos por tipo - produto, serviço, pessoal, assistência e centro de custo).",
@@ -66,6 +79,29 @@ DESCRICOES = {
 
 # Colunas explícitas para as tabelas "pequenas" (COMPOSICAO_PROJETOS usa gerador abaixo)
 COLUNAS = {
+    "fct_banco_bi": {
+        "colaborador_planilha": "Colaborador dono da planilha de origem, extraido do nome da tabela (ex.: wollace_dantas).",
+        "tabela_origem": "Tabela raw de onde a linha foi unificada (ex.: raw_planilhas.wollace_dantas_BANCO_BI).",
+        "DATA": "Data do lancamento na planilha, no formato DD/MM (sem ano). Para filtrar por ano use DATA_DE_CONCLUSAO.",
+        "_Entrega_": "Entrega ou faturamento, sem o prefixo do projeto (ex.: 'ENTREGA 4 - ABRIL/2026 - Fulano - MK830'). Mesmo formato de fct_entregas.ENTREGA; com CENTRO_DE_CUSTO forma a chave para fct_entregas.",
+        "CENTRO_DE_CUSTO": "Centro de custo da entrega (ex.: MK829), retirado do prefixo da entrega. Nao e o codigo do cronograma: um cronograma pode conter entregas de outro centro de custo.",
+        "DATA_DE_CONCLUSAO": "Data de conclusao da entrega em mart_cronogramas.fct_entregas, pela chave (CENTRO_DE_CUSTO, ENTREGA), como data com ano completo. Vazia quando a entrega nao existe em fct_entregas. Se a entrega aparece com datas diferentes, fica a mais recente.",
+        "_Proposta_": "Numero/codigo da proposta comercial do lancamento.",
+        "_Comissao_": "Comissao da entrega.",
+        "___Faturado_": "Percentual faturado da entrega.",
+        "_Fat__Produto_": "Faturamento de produto.",
+        "_Fat__Servico_": "Faturamento de servico.",
+        "_Valor_de_Venda_": "Valor de venda.",
+        "_Comissao_Venda_": "Comissao de venda.",
+        "_Comissao_Gestao_": "Comissao de gestao.",
+        "_Fat__Pessoal_Prd__": "Faturamento pessoal de producao.",
+        "_Fat__Pessoal_Serv__": "Faturamento pessoal de servico.",
+        "_Fat__Pessoal_Gestao_": "Faturamento pessoal de gestao.",
+        "_Comissao_Assistencia_": "Comissao de assistencia tecnica.",
+        "_Faturamento_Assistencia_": "Faturamento de assistencia tecnica.",
+        "_Alocacao__Centro_de_Custo__": "Centro de custo de alocacao do colaborador no periodo (texto completo: codigo, cliente e projeto).",
+        "_Faturamento__Centro_de_Custo__": "Centro de custo do faturamento do lancamento (texto completo: codigo, cliente e projeto).",
+    },
     "BANCO_BI": {
         "DATA": "Data de referência.",
         "_Entrega_": "Valor de entrega.",

@@ -27,7 +27,7 @@ execution_config = ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE)
 with DAG(
     dag_id="dbt_planilhas_stg",
     start_date=datetime(2024, 1, 1),
-    schedule="15 1 * * *",
+    schedule=None,  # disparada pela DAG pipeline_transformacao (de hora em hora)
     catchup=False,
     tags=["dbt", "planilhas", "stg"],
     params={

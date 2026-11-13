@@ -19,6 +19,11 @@
 {% set raw_schema = var('raw_schema', 'raw_planilhas') %}
 {% set debug = var('modo_debug', False) %}
 
+{# Acentos -> ASCII, para casar o nome citado no texto da entrega com o slug do
+   colaborador (que é sem acento). Os dois conjuntos têm o mesmo tamanho. #}
+{% set acentos     = 'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ' %}
+{% set sem_acentos = 'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC' %}
+
 {# 1. Localiza as tabelas de origem: <pessoa>_BANCO_BI (ex.: wollace_dantas_BANCO_BI).
       A tabela BANCO_BI sem prefixo (modelo antigo, uma única tabela para todo
       mundo) não entra, porque o filtro exige o "_" antes de BANCO_BI. #}
@@ -87,7 +92,8 @@
     {% endfor %}
 {% endif %}
 
-{% set exprs_tipadas = conv__lista_select('(' ~ union_sql ~ ') AS _u', colunas_negocio) %}
+{# "___Faturado_" é percentual: guardado como fração (ex.: 50% -> 0.50). #}
+{% set exprs_tipadas = conv__lista_select('(' ~ union_sql ~ ') AS _u', colunas_negocio, dividir_cem=['___Faturado_']) %}
 
 {# Colunas de entrega e de data da planilha (hoje "_Entrega_" e "DATA"). #}
 {% set col_entrega = [] %}
@@ -117,6 +123,16 @@ banco AS (
         {{ e }}
         {%- endfor %}
     FROM source_data
+),
+
+{# 4b. Universo de colaboradores que têm planilha própria (donos distintos) e
+      seus tokens (nome_sobrenome). Serve para identificar, no texto da entrega,
+      quem de fato faturou — só reatribui para quem é colaborador com planilha. #}
+donos AS (
+    SELECT DISTINCT
+        colaborador_planilha AS slug,
+        string_to_array(colaborador_planilha, '_') AS tokens
+    FROM banco
 ),
 
 {# 5. Entrega sem o prefixo, para casar com fct_entregas.ENTREGA:
@@ -163,7 +179,12 @@ entregas AS (
 )
 
 SELECT
-    bc.colaborador_planilha,
+    {# colaborador_planilha = quem REALMENTE faturou. Se a entrega cita um
+       colaborador que tem planilha própria (dono), usa ele; caso contrário,
+       mantém o dono da planilha de alocação. Apenas o VALOR muda — o schema
+       (ordem de colunas) é idêntico ao original, para não deslocar consumidores
+       que leem por posição (ex.: Power BI "Alocação Individual"). #}
+    COALESCE(col_real.slug, bc.colaborador_planilha) AS colaborador_planilha,
     bc.tabela_origem
     {%- for c in colunas_airbyte %},
     bc."{{ c }}"
@@ -186,6 +207,21 @@ SELECT
     e.data_de_conclusao AS "DATA_DE_CONCLUSAO"
     {%- endif %}
 FROM banco_chave bc
+{# Identifica na entrega o colaborador (dono com planilha) cujo nome completo
+   — TODOS os tokens do slug — aparece no texto já normalizado (sem acento,
+   minúsculo, sem pontuação). Entre vários, vence o de nome mais específico
+   (mais tokens). Se nenhum casa, col_real.slug fica NULL e mantém-se o dono. #}
+LEFT JOIN LATERAL (
+    SELECT d.slug
+    FROM donos d
+    WHERE {% if col_entrega %}d.tokens <@ regexp_split_to_array(
+              trim(regexp_replace(
+                  lower(translate(coalesce(bc."{{ col_entrega[0] }}", ''), '{{ acentos }}', '{{ sem_acentos }}')),
+                  '[^a-z0-9]+', ' ', 'g')),
+              '\s+'){% else %}false{% endif %}
+    ORDER BY cardinality(d.tokens) DESC, d.slug
+    LIMIT 1
+) col_real ON true
 LEFT JOIN entregas e
        ON e.centro_de_custo = bc.centro_de_custo
       AND e.entrega_chave = regexp_replace(bc.entrega_sem_prefixo, '\s+', ' ', 'g')

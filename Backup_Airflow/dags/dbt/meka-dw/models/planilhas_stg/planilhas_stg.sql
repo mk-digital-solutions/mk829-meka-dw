@@ -10,6 +10,10 @@
 {% set target_schema_full = var('target_schema', 'stg_planilhas') %}
 {% set debug = var('modo_debug', False) %}
 
+{# Colunas percentuais por tabela: convertidas para fração (ex.: "50%" -> 0.50)
+   para o formato de porcentagem da planilha/BI exibir certo. #}
+{% set colunas_percentuais = {'BANCO_COLABORADORES': ['__CUSTO']} %}
+
 {# ------------------------------------------------------------------
    1. Garante a existência do schema de destino (stg_planilhas)
 ------------------------------------------------------------------- #}
@@ -63,7 +67,7 @@
         {% for col in colunas_airbyte %}
             {% do select_parts.append('"' ~ col ~ '"') %}
         {% endfor %}
-        {% for expr in conv__lista_select(src, colunas_negocio) %}
+        {% for expr in conv__lista_select(src, colunas_negocio, dividir_cem=colunas_percentuais.get(tabela, [])) %}
             {% do select_parts.append(expr) %}
         {% endfor %}
 
