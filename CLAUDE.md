@@ -25,6 +25,7 @@
 | **OpenMetadata: catálogo, descrições, lineage, :8585 fora** | [kb/05](kb/05-openmetadata.md) | [kb/07](kb/07-operacao-e-manutencao.md) |
 | **Erro no refresh do Power BI, Planilha de Gestão** | [kb/06](kb/06-consumo-power-bi-e-sheets.md) | [kb/04](kb/04-dbt-modelos-e-nomenclatura.md) |
 | **Servidor caiu, reboot, disco, memória, limpeza** | [kb/07](kb/07-operacao-e-manutencao.md) | [kb/01](kb/01-infraestrutura-e-rede.md) |
+| **Backup completo, migrar para outro servidor/datacenter** | [kb/07 §Backup](kb/07-operacao-e-manutencao.md#backup-completo-base-para-migrar-de-servidor) | [kb/01](kb/01-infraestrutura-e-rede.md) (IP espalhado nos arquivos) |
 | **Portal web Meka-DW (Flask, :80/:443)** | [kb/08](kb/08-portal-meka-dw.md) | nenhum |
 | **De onde veio cada afirmação, o que há na pasta** | [kb/09](kb/09-indice-fontes.md) | nenhum |
 | **O que está aberto, o que diverge** | [kb/10](kb/10-pendencias.md) | nenhum |

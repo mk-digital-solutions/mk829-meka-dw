@@ -58,6 +58,7 @@ uma linha daqui. Estado: **L** = lido, **P** = parseado (estrutura/trechos), **I
 | `/home/mkadmin/airbyte_cronogramas_ativas_20261113.tsv` | I | conexões de cronograma ativas em 13/11 |
 | `/home/mkadmin/drop_cronogramas_antigos_20261029.sql` | I | DROPs do incidente de 29/10 |
 | `/home/mkadmin/mk829-meka-dw_backup_072026.tar.gz` | I (2 GB, root) | backup do repo de jul/2026 |
+| `/home/mkadmin/backups/` | L | `backup_meka_dw.sh` e os backups completos `meka-dw_*` (primeiro: 16/11/2026, 3,7 GB) ([07](07-operacao-e-manutencao.md)) |
 | `/home/mkadmin/docker-compose.yaml` | I | compose do DW antigo (`mkadmin_db_data`), **senha em texto puro** |
 | `/home/mkadmin/mk829-meka-dw-apresentacao.html`, `meka-brand-main/mk829-meka-dw-treinamento.html` | I | apresentação e treinamento |
 | `/etc/network/interfaces`, `/etc/systemd/resolved.conf.d/meka-dw.conf`, `/etc/rancher/k3s/config.yaml` | I (pela memória) | rede e k3s |

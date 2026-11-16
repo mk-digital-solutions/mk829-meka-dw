@@ -70,6 +70,39 @@ Sem o Airbyte, a VM usa ~7 GB (Airflow, OM, ES, VS Code, k3s ocioso ~0,5 GB).
 5. Airflow: o `pipeline_transformacao` voltou a dar success?
 6. Portal: abrir `http://192.168.0.157` **de fora** do servidor.
 
+## Backup completo (base para migrar de servidor)
+
+Script `/home/mkadmin/backups/backup_meka_dw.sh`, fora do repositório (há uma cópia em `sistema/` dentro de
+cada backup). Ele gera `/home/mkadmin/backups/meka-dw_AAAAMMDD_HHMM/` com `LEIAME.md`, `SHA256SUMS` e
+`backup.log`. Com `COM_LOGS=0`, pula os logs. O backup roda com tudo no ar, porque o `pg_dump` é
+consistente por banco. **No corte definitivo, parar Airbyte e Airflow antes**, senão o que for gravado
+depois do dump se perde.
+
+O primeiro backup foi feito em **16/11/2026 às 15:06**: 3,7 GB em ~8 min, 0 falhas, a pedido do Guilherme
+(proposta de levar o Meka-DW para um datacenter sem levar a VM).
+
+| parte | tamanho | como |
+|---|---|---|
+| DW (`postgres_db`, banco `postgres`) | 859 MB | `pg_dump -Fc` + `globals.sql` (roles) + `inventario_*.csv` para conferir o restore |
+| `db-airbyte` (conexões, credenciais, estado incremental, histórico) | 477 MB | `pg_dump -Fc` via `kubectl exec` + secrets do k8s + `values.yaml` |
+| `job-logging` do Airbyte | 928 MB | tar.gz (15 GB brutos) |
+| imagens construídas aqui | 713 MB | `docker save` das 6 `backup_airflow-airflow-*` (camadas idênticas) + `portal-portal`: não existem em registro e reconstruir exige internet |
+| pasta do projeto | 617 MB | tar.gz como root; inclui o banco do OM copiado a frio (estava parado) |
+| Airflow: metadados + logs | 7 MB + 77 MB | `pg_dump -Fc` / tar.gz; a FERNET_KEY está no `.env` |
+
+**Fica de fora, de propósito:**
+- o Temporal do Airbyte (em 16/11/2026: `temporal` 16 GB + `temporal_visibility` 12 GB), que é estado de orquestração e se recria sozinho;
+- `workload` e `activity-payloads`;
+- as imagens públicas;
+- os volumes órfãos (`mkadmin_db_data`, que é o DW antigo, sem escrita desde 07/05/2026).
+
+**Cuidados:**
+- O dump segura locks de leitura no DW por ~1 min. Nesse intervalo, DROP/RENAME de sync overwrite e o dbt
+  esperam, então rode fora do `:30`.
+- As versões precisam ser iguais ou mais novas no destino: o DW é PG 14.22, o Airflow PG 16, o Airbyte
+  PG 17.5 com `abctl` v0.30.4.
+- O diretório tem as credenciais em claro, por isso é `700`.
+
 ## Permissões do Claude neste servidor
 
 O auto mode do Claude bloqueia: cancelar jobs do Airbyte, alterar conexões/tabelas do Airbyte, `docker

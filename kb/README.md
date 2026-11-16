@@ -1,6 +1,9 @@
 # Base de conhecimento: `mk829-meka-dw`
 
-> **Última consolidação: 13/11/2026**, criação da KB (branch `dev-wollace`). Consolida os documentos
+> **Última consolidação: 16/11/2026**: backup completo e o que entra numa migração de servidor
+> ([07](07-operacao-e-manutencao.md#backup-completo-base-para-migrar-de-servidor)).
+>
+> **13/11/2026**, criação da KB (branch `dev-wollace`). Consolida os documentos
 > soltos da raiz do repositório, o código em `Backup_Airflow/`, `manutencao/` e as 15 memórias do Claude
 > deste servidor (sessões de jun a nov/2026), mais o estado observado dos containers em 13/11/2026.
 
